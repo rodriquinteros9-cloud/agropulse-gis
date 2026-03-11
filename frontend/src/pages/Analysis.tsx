@@ -34,11 +34,12 @@ export default function Analysis({ appState, setAppState }: { appState: AppState
         return d.toISOString().split('T')[0];
     });
     const [endDate, setEndDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
+    const [satelliteSource, setSatelliteSource] = useState<string>("Sentinel-2");
 
     // Derived values — computed every render (no stale closure risk)
     const activeLotId = selectedLotId || (lotes.length > 0 ? lotes[0].id : "");
     const selectedLot = lotes.find((l: any) => l.id === activeLotId);
-    const tsCacheKey = `${activeLotId}|${startDate}|${endDate}`;
+    const tsCacheKey = `${activeLotId}|${startDate}|${endDate}|${satelliteSource}`;
 
     // ── Simple local state for data ──────────────────────────────────────────
     const [weatherData, setWeatherDataLocal] = useState<any>(null);
@@ -133,6 +134,7 @@ export default function Analysis({ appState, setAppState }: { appState: AppState
                 fecha_inicio: startDate,
                 fecha_fin: endDate,
                 indice: "NDVI",
+                satellite: satelliteSource,
                 force_refresh: forceRefresh
             };
 
@@ -179,28 +181,28 @@ export default function Analysis({ appState, setAppState }: { appState: AppState
     return (
         <div className="flex flex-col gap-6 h-full overflow-y-auto pb-8">
             <div>
-                <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>Análisis Individual</h1>
-                <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-secondary)' }}>Evolución temporal de vigor y parámetros del lote seleccionado.</p>
+                <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Análisis Individual</h1>
+                <p className="text-base mt-2 text-slate-500 font-medium">Evolución temporal de vigor y parámetros del lote seleccionado.</p>
             </div>
 
             {/* Selector de Lote */}
-            <div className="agro-card p-5">
-                <label className="block text-xs font-semibold mb-2 flex items-center gap-1.5" style={{ color: 'var(--color-text-secondary)' }}>
-                    <Map size={13} /> Seleccioná un Lote
+            <div className="agro-card p-6 bg-white/60">
+                <label className="block text-xs font-bold uppercase tracking-wide mb-3 flex items-center gap-1.5 text-slate-500">
+                    <Map size={14} /> Seleccioná un Lote
                 </label>
                 <select
                     value={activeLotId}
                     onChange={(e) => setSelectedLotId(e.target.value)}
-                    className="w-full text-sm rounded-lg px-3 py-2.5 outline-none transition font-medium"
-                    style={{ background: 'var(--color-background)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
+                    className="w-full text-base rounded-xl px-4 py-3 outline-none transition font-bold bg-white border border-slate-200 text-slate-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 shadow-sm appearance-none"
+                    style={{ backgroundImage: "url(\"data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 1rem center", backgroundSize: "1.2em" }}
                 >
                     {lotes.map((lote: any) => (
                         <option key={lote.id} value={lote.id}>{lote.name}</option>
                     ))}
                 </select>
                 {lotes.length === 0 && (
-                    <p className="text-xs mt-2 flex items-center gap-1" style={{ color: '#B08000' }}>
-                        <Info size={12} /> No hay lotes cargados. Subí un KML en el inicio.
+                    <p className="text-xs mt-3 flex items-center gap-1.5 font-semibold text-amber-600">
+                        <Info size={14} /> No hay lotes cargados. Subí un KML en el inicio.
                     </p>
                 )}
             </div>
@@ -209,42 +211,42 @@ export default function Analysis({ appState, setAppState }: { appState: AppState
                 <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Superficie */}
-                        <div className="agro-card p-6 flex flex-col items-center justify-center text-center">
-                            <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: 'var(--color-muted)' }}>Superficie del Lote</p>
-                            <div className="text-5xl font-extrabold mb-1" style={{ color: 'var(--color-primary)' }}>
+                        <div className="agro-card p-8 flex flex-col items-center justify-center text-center">
+                            <p className="text-xs font-bold uppercase tracking-widest mb-4 text-slate-400">Superficie del Lote</p>
+                            <div className="text-6xl font-extrabold mb-2 text-emerald-500 tracking-tight">
                                 {selectedLot.area_ha.toFixed(2)}
-                                <span className="text-2xl font-medium ml-1" style={{ color: 'var(--color-muted)' }}>ha</span>
+                                <span className="text-2xl font-bold ml-1.5 text-slate-400">ha</span>
                             </div>
-                            <p className="text-xs mt-1" style={{ color: 'var(--color-muted)' }}>Área total del polígono</p>
+                            <p className="text-sm mt-1 font-medium text-slate-500">Área total del polígono</p>
                         </div>
 
                         {/* Clima */}
-                        <div className="agro-card p-6 flex flex-col justify-center">
-                            <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: 'var(--color-muted)' }}>Condiciones Climáticas Actuales</p>
+                        <div className="agro-card p-8 flex flex-col justify-center">
+                            <p className="text-xs font-bold uppercase tracking-widest mb-5 text-slate-400">Condiciones Climáticas Actuales</p>
 
                             {loadingWeather ? (
                                 <div className="flex flex-col items-center justify-center py-4">
-                                    <Loader2 className="animate-spin mb-2" size={24} style={{ color: 'var(--color-primary)' }} />
-                                    <span className="text-xs" style={{ color: 'var(--color-muted)' }}>Cargando clima…</span>
+                                    <Loader2 className="animate-spin mb-3 text-emerald-500" size={28} />
+                                    <span className="text-sm font-medium text-slate-500">Cargando clima…</span>
                                 </div>
                             ) : weatherError ? (
-                                <div className="text-sm p-3 rounded-lg" style={{ background: '#FFF0F0', color: '#B71C1C' }}>{weatherError}</div>
+                                <div className="text-sm p-4 rounded-xl font-medium bg-red-50 text-red-600 border border-red-100">{weatherError}</div>
                             ) : weatherData ? (
-                                <div className="grid grid-cols-3 gap-3">
-                                    <div className="flex flex-col items-center p-3 rounded-xl" style={{ background: 'rgba(212,168,67,0.08)', border: '1px solid rgba(212,168,67,0.2)' }}>
-                                        <Thermometer size={20} className="mb-1.5" style={{ color: '#D4A843' }} />
-                                        <span className="text-lg font-bold" style={{ color: 'var(--color-text)' }}>{weatherData.temperature}°C</span>
-                                        <span className="text-[10px] font-semibold uppercase" style={{ color: '#B08000' }}>Temp</span>
+                                <div className="grid grid-cols-3 gap-4">
+                                    <div className="flex flex-col items-center p-4 rounded-2xl bg-amber-50 border border-amber-100 shadow-sm">
+                                        <Thermometer size={24} className="mb-2 text-amber-500" />
+                                        <span className="text-xl font-extrabold text-slate-800">{weatherData.temperature}°C</span>
+                                        <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600/80 mt-1">Temp</span>
                                     </div>
-                                    <div className="flex flex-col items-center p-3 rounded-xl" style={{ background: 'rgba(74,144,184,0.08)', border: '1px solid rgba(74,144,184,0.2)' }}>
-                                        <Droplets size={20} className="mb-1.5" style={{ color: '#4A90B8' }} />
-                                        <span className="text-lg font-bold" style={{ color: 'var(--color-text)' }}>{weatherData.humidity}%</span>
-                                        <span className="text-[10px] font-semibold uppercase" style={{ color: '#2A6B8A' }}>Humedad</span>
+                                    <div className="flex flex-col items-center p-4 rounded-2xl bg-blue-50 border border-blue-100 shadow-sm">
+                                        <Droplets size={24} className="mb-2 text-blue-500" />
+                                        <span className="text-xl font-extrabold text-slate-800">{weatherData.humidity}%</span>
+                                        <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600/80 mt-1">Humedad</span>
                                     </div>
-                                    <div className="flex flex-col items-center p-3 rounded-xl" style={{ background: 'rgba(45,106,79,0.07)', border: '1px solid rgba(45,106,79,0.15)' }}>
-                                        <Wind size={20} className="mb-1.5" style={{ color: 'var(--color-primary)' }} />
-                                        <span className="text-lg font-bold" style={{ color: 'var(--color-text)' }}>{weatherData.wind_speed}</span>
-                                        <span className="text-[10px] font-semibold uppercase" style={{ color: 'var(--color-primary)' }}>{weatherData.wind_unit || 'km/h'}</span>
+                                    <div className="flex flex-col items-center p-4 rounded-2xl bg-emerald-50 border border-emerald-100 shadow-sm">
+                                        <Wind size={24} className="mb-2 text-emerald-500" />
+                                        <span className="text-xl font-extrabold text-slate-800">{weatherData.wind_speed}</span>
+                                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600/80 mt-1">{weatherData.wind_unit || 'km/h'}</span>
                                     </div>
                                 </div>
                             ) : null}
@@ -262,134 +264,144 @@ export default function Analysis({ appState, setAppState }: { appState: AppState
                     )}
 
                     {/* Serie Temporal NDVI */}
-                    <div className="agro-card p-6 flex flex-col">
-                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-5">
+                    <div className="agro-card p-8 flex flex-col">
+                        <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-5 mb-6">
                             <div>
-                                <h3 className="text-base font-bold flex items-center gap-2" style={{ color: 'var(--color-text)' }}>
-                                    <Activity style={{ color: 'var(--color-primary)' }} size={18} />
+                                <h3 className="text-lg font-extrabold flex items-center gap-2 text-slate-800 tracking-tight">
+                                    <Activity className="text-emerald-500" size={20} />
                                     Evolución de Vigor (NDVI) y Uniformidad (CV%)
                                 </h3>
-                                <p className="text-xs mt-0.5" style={{ color: 'var(--color-muted)' }}>Biomasa satelital — Sentinel-2 / Earth Engine.</p>
+                                <p className="text-sm mt-1 font-medium text-slate-500">Biomasa satelital — Sentinel-2 / Earth Engine.</p>
                             </div>
 
-                            {/* Controles de Fecha */}
-                            <div className="flex items-center gap-2">
-                                <div className="flex items-center gap-1.5 rounded-lg px-3 py-2" style={{ background: 'var(--color-background)', border: '1px solid var(--color-border)' }}>
-                                    <Calendar size={13} style={{ color: 'var(--color-muted)' }} />
+                            {/* Controles de Fecha y Satélite */}
+                            <div className="flex flex-wrap items-center gap-3 bg-slate-50 p-2 rounded-2xl border border-slate-100">
+                                <div className="flex items-center gap-2 rounded-xl px-4 py-2 bg-white border border-slate-200 shadow-sm">
+                                    <Calendar size={14} className="text-slate-400" />
                                     <input
                                         type="date" value={startDate}
                                         onChange={e => setStartDate(e.target.value)}
-                                        className="bg-transparent text-xs outline-none" style={{ color: 'var(--color-text)' }}
+                                        className="bg-transparent text-sm font-semibold text-slate-700 outline-none"
                                     />
-                                    <span style={{ color: 'var(--color-muted)' }}>–</span>
+                                    <span className="text-slate-300 font-bold mx-1">–</span>
                                     <input
                                         type="date" value={endDate}
                                         onChange={e => setEndDate(e.target.value)}
-                                        className="bg-transparent text-xs outline-none" style={{ color: 'var(--color-text)' }}
+                                        className="bg-transparent text-sm font-semibold text-slate-700 outline-none"
                                     />
                                 </div>
+                                <select
+                                    value={satelliteSource}
+                                    onChange={(e) => setSatelliteSource(e.target.value)}
+                                    className="text-sm font-semibold text-slate-700 rounded-xl px-4 py-2.5 outline-none transition pr-10 bg-white border border-slate-200 shadow-sm appearance-none"
+                                    style={{ backgroundImage: "url(\"data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 1rem center", backgroundSize: "1em" }}
+                                >
+                                    <option value="Sentinel-2">Sentinel-2 (10m - c/5 días)</option>
+                                    <option value="Landsat">Landsat 8/9 (30m - c/8 días)</option>
+                                </select>
                                 <button
                                     onClick={() => fetchTimeSeries(false)}
                                     disabled={loadingTimeSeries}
-                                    className="btn-primary text-xs px-3 py-2"
+                                    className="btn-primary text-sm px-5 py-2.5 shadow-emerald-500/20"
                                 >
-                                    {loadingTimeSeries ? <Loader2 size={13} className="animate-spin" /> : <TrendingUp size={13} />}
+                                    {loadingTimeSeries ? <Loader2 size={16} className="animate-spin" /> : <TrendingUp size={16} />}
                                     Analizar
                                 </button>
                                 {timeSeriesData.length > 0 && !loadingTimeSeries && (
                                     <button
                                         onClick={() => fetchTimeSeries(true)}
                                         title="Forzar recalculo"
-                                        className="btn-ghost text-xs px-2.5 py-2"
+                                        className="btn-ghost text-sm px-3 py-2.5 hover:bg-slate-100"
                                     >
-                                        <RefreshCw size={12} />
+                                        <RefreshCw size={16} />
                                     </button>
                                 )}
                             </div>
                         </div>
 
                         {/* Chart Area */}
-                        <div className="w-full h-[400px] flex items-center justify-center bg-gray-50 rounded-xl border border-gray-100 p-4 relative">
+                        <div className="w-full h-[450px] flex items-center justify-center bg-white rounded-2xl border border-slate-100 p-5 relative shadow-inner">
                             {fromCache === true && !loadingTimeSeries && (
-                                <div className="absolute top-3 right-3 flex items-center gap-1 bg-green-50 text-green-700 border border-green-200 text-xs font-semibold px-2 py-1 rounded-full">
-                                    <Zap size={11} className="fill-green-500 text-green-500" /> Caché instantáneo
+                                <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold px-3 py-1.5 rounded-full shadow-sm z-10">
+                                    <Zap size={12} className="fill-emerald-500 text-emerald-500" /> Caché instantáneo
                                 </div>
                             )}
                             {loadingTimeSeries ? (
-                                <div className="flex flex-col items-center justify-center text-primary">
-                                    <Loader2 size={40} className="animate-spin mb-4" />
-                                    <span className="font-medium">Calculando en Google Earth Engine...</span>
-                                    <span className="text-sm text-gray-500 mt-2">Solo la primera vez tarda. Las siguientes serán instantáneas.</span>
+                                <div className="flex flex-col items-center justify-center text-emerald-600">
+                                    <Loader2 size={48} className="animate-spin mb-5" />
+                                    <span className="font-bold text-lg text-slate-800">Calculando en Google Earth Engine...</span>
+                                    <span className="text-sm text-slate-500 mt-2 font-medium">Solo la primera vez tarda. Las siguientes serán instantáneas.</span>
                                 </div>
                             ) : timeSeriesError ? (
                                 <div className="text-center max-w-sm">
-                                    <Info className="mx-auto mb-2" size={26} style={{ color: 'var(--color-danger)' }} />
-                                    <p className="font-bold text-sm" style={{ color: 'var(--color-danger)' }}>Error al procesar</p>
-                                    <p className="text-xs mt-1" style={{ color: 'var(--color-muted)' }}>{timeSeriesError}</p>
+                                    <Info className="mx-auto mb-3 text-red-500" size={32} />
+                                    <p className="font-bold text-base text-red-600">Error al procesar</p>
+                                    <p className="text-sm mt-1 text-slate-600 font-medium">{timeSeriesError}</p>
                                 </div>
                             ) : timeSeriesData && timeSeriesData.length > 0 ? (
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <LineChart data={timeSeriesData} margin={{ top: 8, right: 12, left: -20, bottom: 0 }}>
-                                        <CartesianGrid strokeDasharray="0" vertical={false} stroke="var(--color-border)" />
+                                    <LineChart data={timeSeriesData} margin={{ top: 16, right: 12, left: -20, bottom: 0 }}>
+                                        <CartesianGrid strokeDasharray="0" vertical={false} stroke="#E2E8F0" />
                                         <XAxis
                                             dataKey="Fecha"
                                             tickFormatter={(val) => {
                                                 const d = new Date(val);
                                                 return `${d.getDate()}/${d.getMonth() + 1}/${String(d.getFullYear()).slice(2)}`;
                                             }}
-                                            tick={{ fill: 'var(--color-text-secondary)', fontSize: 11 }}
-                                            tickMargin={10}
-                                            axisLine={{ stroke: 'var(--color-border)' }}
+                                            tick={{ fill: '#64748B', fontSize: 12, fontWeight: 500 }}
+                                            tickMargin={12}
+                                            axisLine={{ stroke: '#E2E8F0' }}
                                             tickLine={false}
                                         />
-                                        <YAxis yAxisId="left" tick={{ fill: 'var(--color-text-secondary)', fontSize: 11 }} axisLine={false} tickLine={false} domain={[0, 1]} />
-                                        <YAxis yAxisId="right" orientation="right" tick={{ fill: 'var(--color-text-secondary)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                                        <YAxis yAxisId="left" tick={{ fill: '#64748B', fontSize: 12, fontWeight: 500 }} axisLine={false} tickLine={false} domain={[0, 1]} />
+                                        <YAxis yAxisId="right" orientation="right" tick={{ fill: '#64748B', fontSize: 12, fontWeight: 500 }} axisLine={false} tickLine={false} />
                                         <Tooltip content={<CustomTooltip />} />
-                                        <Legend wrapperStyle={{ paddingTop: '16px', fontSize: 12 }} />
+                                        <Legend wrapperStyle={{ paddingTop: '24px', fontSize: 13, fontWeight: 600, color: '#475569' }} />
                                         <Line
                                             yAxisId="left" name="Vigor (NDVI)" type="monotone" dataKey="NDVI_Mean"
-                                            stroke="var(--color-primary)" strokeWidth={3}
-                                            dot={{ r: 2.5, fill: 'var(--color-primary)', strokeWidth: 0 }}
-                                            activeDot={{ r: 5 }}
+                                            stroke="#10B981" strokeWidth={4}
+                                            dot={{ r: 3, fill: '#10B981', strokeWidth: 0 }}
+                                            activeDot={{ r: 6, stroke: 'white', strokeWidth: 2 }}
                                         />
                                         <Line
                                             yAxisId="right" name="Heterogeneidad (CV %)" type="monotone" dataKey="CV_%"
-                                            stroke="var(--color-accent)" strokeWidth={2}
-                                            strokeDasharray="5 4"
-                                            dot={{ r: 2, fill: 'var(--color-accent)', strokeWidth: 0 }}
+                                            stroke="#3B82F6" strokeWidth={2.5}
+                                            strokeDasharray="6 4"
+                                            dot={{ r: 2.5, fill: '#3B82F6', strokeWidth: 0 }}
+                                            activeDot={{ r: 5, stroke: 'white', strokeWidth: 2 }}
                                         />
                                     </LineChart>
                                 </ResponsiveContainer>
                             ) : (
-                                <div className="flex flex-col items-center gap-2">
-                                    <Info className="opacity-25" size={28} style={{ color: 'var(--color-muted)' }} />
-                                    <p className="text-sm" style={{ color: 'var(--color-muted)' }}>Presá <strong>Analizar</strong> para calcular la evolución de vigor.</p>
+                                <div className="flex flex-col items-center gap-3">
+                                    <Info className="opacity-30 text-slate-400" size={36} />
+                                    <p className="text-base font-medium text-slate-500">Presioná <strong>Analizar</strong> para calcular la evolución de vigor.</p>
                                 </div>
                             )}
                         </div>
 
                         {/* Summary Cards */}
                         {timeSeriesData && timeSeriesData.length > 0 && !loadingTimeSeries && (
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-5">
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
                                 {[{
                                     label: 'NDVI Reciente', value: timeSeriesData[timeSeriesData.length - 1]?.NDVI_Mean?.toFixed(2) || 'N/A',
-                                    bg: 'rgba(45,106,79,0.07)', border: 'rgba(45,106,79,0.18)', color: 'var(--color-primary)'
+                                    bg: 'bg-emerald-50', border: 'border-emerald-100', color: 'text-emerald-600'
                                 }, {
                                     label: 'CV% Reciente', value: `${timeSeriesData[timeSeriesData.length - 1]?.['CV_%']?.toFixed(1) || 'N/A'}%`,
                                     sub: 'Mayor % = lote desparejo',
-                                    bg: 'rgba(212,168,67,0.07)', border: 'rgba(212,168,67,0.2)', color: 'var(--color-accent)'
+                                    bg: 'bg-blue-50', border: 'border-blue-100', color: 'text-blue-600'
                                 }, {
                                     label: 'NDVI Máximo', value: Math.max(...timeSeriesData.map((d: any) => d.NDVI_Mean || 0)).toFixed(2),
-                                    bg: 'var(--color-background)', border: 'var(--color-border)', color: 'var(--color-text)'
+                                    bg: 'bg-slate-50', border: 'border-slate-200', color: 'text-slate-800'
                                 }, {
                                     label: 'Imágenes válidas', value: timeSeriesData.length,
-                                    sub: 'Sin cobertura nubosa',
-                                    bg: 'var(--color-background)', border: 'var(--color-border)', color: 'var(--color-text)'
+                                    sub: 'Sin nubes',
+                                    bg: 'bg-slate-50', border: 'border-slate-200', color: 'text-slate-800'
                                 }].map((s, i) => (
-                                    <div key={i} className="rounded-xl p-4 flex flex-col justify-center" style={{ background: s.bg, border: `1px solid ${s.border}` }}>
-                                        <span className="text-[10px] font-semibold uppercase tracking-wide mb-1" style={{ color: 'var(--color-muted)' }}>{s.label}</span>
-                                        <span className="text-2xl font-bold" style={{ color: s.color }}>{s.value}</span>
-                                        {s.sub && <span className="text-[10px] mt-0.5" style={{ color: 'var(--color-muted)' }}>{s.sub}</span>}
+                                    <div key={i} className={`rounded-2xl p-5 flex flex-col justify-center border ${s.bg} ${s.border} shadow-sm`}>
+                                        <span className="text-xs font-bold uppercase tracking-wide mb-1.5 text-slate-400">{s.label}</span>
+                                        <span className={`text-3xl font-extrabold tracking-tight ${s.color}`}>{s.value}</span>
+                                        {s.sub && <span className="text-[11px] font-medium mt-1 text-slate-400">{s.sub}</span>}
                                     </div>
                                 ))}
                             </div>

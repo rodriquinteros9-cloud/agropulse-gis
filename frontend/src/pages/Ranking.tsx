@@ -33,9 +33,10 @@ export default function Ranking({ appState, setAppState }: { appState: AppState,
     const [startDate, setStartDate] = useState(past.toISOString().split('T')[0]);
     const [endDate, setEndDate] = useState(today.toISOString().split('T')[0]);
     const [indexSelected, setIndexSelected] = useState('NDVI');
+    const [satelliteSource, setSatelliteSource] = useState('Sentinel-2');
 
-    // Clave de caché para el benchmark: cambia solo cuando el usuario cambia fechas o índice
-    const benchmarkCacheKey = `${startDate}|${endDate}|${indexSelected}`;
+    // Clave de caché para el benchmark: cambia solo cuando el usuario cambia fechas, índice o satélite
+    const benchmarkCacheKey = `${startDate}|${endDate}|${indexSelected}|${satelliteSource}`;
     const cachedBenchmark = appState.moduleCache?.benchmarkData?.[benchmarkCacheKey];
 
     // Inicializar desde caché si existe — instantáneo al volver al módulo
@@ -140,7 +141,8 @@ export default function Ranking({ appState, setAppState }: { appState: AppState,
                     lotes,
                     fecha_inicio: startDate,
                     fecha_fin: endDate,
-                    indice: indexSelected
+                    indice: indexSelected,
+                    satellite: satelliteSource
                 })
             });
 
@@ -155,18 +157,18 @@ export default function Ranking({ appState, setAppState }: { appState: AppState,
         }
     };
 
-    // ── Agro IP color scale: dark forest → medium green → light sage ──────────
+    // ── Agro IP color scale: deep emerald → bright mint ──────────
     const getBarColor = (entry: any) => {
-        if (entry.ip_ponderado > 80) return '#1B4332';  // dark canopy
-        if (entry.ip_ponderado > 60) return '#2D6A4F';  // forest
-        if (entry.ip_ponderado > 40) return '#52B788';  // fresh leaf
-        return '#B7E4C7';                                // pale sage
+        if (entry.ip_ponderado > 80) return '#059669';  // deep emerald
+        if (entry.ip_ponderado > 60) return '#10B981';  // vibrant emerald
+        if (entry.ip_ponderado > 40) return '#34D399';  // gentle mint
+        return '#A7F3D0';                               // pale mint
     };
 
-    // Agro benchmark palette — earthy / natural tones
+    // Agro benchmark palette — bright premium tones
     const AGRO_COLORS = [
-        '#2D6A4F', '#52B788', '#D4A843', '#8B5E3C', '#4A90B8',
-        '#74C69D', '#F0C96A', '#A0522D', '#5B8FA8', '#95D5B2'
+        '#10B981', '#3B82F6', '#F59E0B', '#F43F5E', '#8B5CF6',
+        '#06B6D4', '#EAB308', '#EC4899', '#14B8A6', '#6366F1'
     ];
 
     const centerLat = appState.globalMetadata?.center_lat || -31.4;
@@ -206,11 +208,11 @@ export default function Ranking({ appState, setAppState }: { appState: AppState,
             <div className="flex flex-col gap-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>Análisis Macro de Productividad</h1>
-                        <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-secondary)' }}>Ranking de Índice Productivo Ponderado (IP) mediante suelos IDECOR.</p>
+                        <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Análisis Macro de Productividad</h1>
+                        <p className="text-base mt-2 text-slate-500 font-medium">Ranking de Índice Productivo Ponderado (IP) mediante suelos IDECOR.</p>
                     </div>
                     <button className="btn-ghost text-sm">
-                        <DownloadCloud size={15} /> Exportar CSV
+                        <DownloadCloud size={16} /> Exportar CSV
                     </button>
                 </div>
 
@@ -220,30 +222,30 @@ export default function Ranking({ appState, setAppState }: { appState: AppState,
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-[500px]">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 min-h-[500px]">
                     {/* Map card */}
                     <div className="agro-card p-4 flex flex-col">
-                        <h3 className="text-sm font-semibold mb-3 flex items-center gap-2" style={{ color: 'var(--color-text-secondary)' }}>
-                            <span className="w-2 h-2 rounded-full inline-block" style={{ background: 'var(--color-primary)' }} />
+                        <h3 className="text-sm font-bold uppercase tracking-wider mb-4 flex items-center gap-2 text-slate-500">
+                            <span className="w-2.5 h-2.5 rounded-full inline-block bg-emerald-500 shadow-sm" />
                             Distribución Espacial
                         </h3>
-                        <div className="flex-1 rounded-xl overflow-hidden" style={{ background: 'var(--color-background)' }}>
+                        <div className="flex-1 rounded-2xl overflow-hidden shadow-inner border border-slate-100 bg-slate-50">
                             <MapComponent geojsonData={appState.spatialData} centerLat={centerLat} centerLon={centerLon} />
                         </div>
                     </div>
 
                     {/* IP Bar Chart card */}
-                    <div className="agro-card p-6 flex flex-col">
-                        <h3 className="text-sm font-semibold mb-1 flex items-center gap-2" style={{ color: 'var(--color-text-secondary)' }}>
-                            <TrendingUp size={15} style={{ color: 'var(--color-primary)' }} />
+                    <div className="agro-card p-8 flex flex-col">
+                        <h3 className="text-sm font-bold uppercase tracking-wider mb-2 flex items-center gap-2 text-slate-500">
+                            <TrendingUp size={16} className="text-emerald-500" />
                             Índice de Productividad por Lote
                             {fromCache === true && !loadingRanking && (
-                                <span className="ml-auto flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'rgba(82,183,136,0.12)', color: 'var(--color-primary)', border: '1px solid rgba(82,183,136,0.3)' }}>
-                                    <Zap size={9} /> instantáneo
+                                <span className="ml-auto flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 shadow-sm">
+                                    <Zap size={10} /> instantáneo
                                 </span>
                             )}
                         </h3>
-                        <p className="text-xs mb-4" style={{ color: 'var(--color-muted)' }}>Puntaje 0–100 basado en tipo de suelo</p>
+                        <p className="text-sm mb-6 font-medium text-slate-400">Puntaje 0–100 basado en tipo de suelo</p>
 
                         <div className="flex-1 relative min-h-[300px]">
                             {loadingRanking ? (
@@ -283,144 +285,153 @@ export default function Ranking({ appState, setAppState }: { appState: AppState,
             {/* ══════════ MÓDULO 2: BENCHMARKING ══════════ */}
             <div className="flex flex-col gap-6">
                 <div>
-                    <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>Serie Temporal y Benchmarking</h1>
-                    <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-secondary)' }}>Evolución del Vigor satelital entre lotes — Sentinel-2 / Earth Engine.</p>
+                    <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Serie Temporal y Benchmarking</h1>
+                    <p className="text-base mt-2 text-slate-500 font-medium">Evolución del Vigor satelital entre lotes — Sentinel-2 / Earth Engine.</p>
                 </div>
 
                 {/* Control panel */}
-                <div className="agro-card p-4 flex flex-wrap gap-4 items-end">
+                <div className="agro-card p-6 flex flex-wrap gap-5 items-end bg-white/60">
                     <div>
-                        <label className="block text-xs font-semibold mb-1.5 flex items-center gap-1" style={{ color: 'var(--color-text-secondary)' }}>
-                            <Calendar size={12} /> Desde
+                        <label className="block text-xs font-bold uppercase tracking-wide mb-2 flex items-center gap-1.5 text-slate-500">
+                            <Calendar size={14} /> Desde
                         </label>
                         <input
                             type="date" value={startDate}
                             onChange={(e) => setStartDate(e.target.value)}
-                            className="text-sm rounded-lg px-3 py-2 outline-none transition"
-                            style={{ background: 'var(--color-background)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
+                            className="text-sm rounded-xl px-4 py-2.5 outline-none transition bg-white border border-slate-200 text-slate-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 shadow-sm"
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-semibold mb-1.5 flex items-center gap-1" style={{ color: 'var(--color-text-secondary)' }}>
-                            <Calendar size={12} /> Hasta
+                        <label className="block text-xs font-bold uppercase tracking-wide mb-2 flex items-center gap-1.5 text-slate-500">
+                            <Calendar size={14} /> Hasta
                         </label>
                         <input
                             type="date" value={endDate}
                             onChange={(e) => setEndDate(e.target.value)}
                             max={today.toISOString().split('T')[0]}
-                            className="text-sm rounded-lg px-3 py-2 outline-none transition"
-                            style={{ background: 'var(--color-background)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
+                            className="text-sm rounded-xl px-4 py-2.5 outline-none transition bg-white border border-slate-200 text-slate-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 shadow-sm"
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-text-secondary)' }}>Índice</label>
+                        <label className="block text-xs font-bold uppercase tracking-wide mb-2 text-slate-500">Índice</label>
                         <select
                             value={indexSelected}
                             onChange={(e) => setIndexSelected(e.target.value)}
-                            className="text-sm rounded-lg px-3 py-2 outline-none transition pr-8"
-                            style={{ background: 'var(--color-background)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
+                            className="text-sm rounded-xl px-4 py-2.5 outline-none transition pr-10 bg-white border border-slate-200 text-slate-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 shadow-sm appearance-none"
+                            style={{ backgroundImage: "url(\"data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 1rem center", backgroundSize: "1em" }}
                         >
                             <option value="NDVI">NDVI</option>
                             <option value="EVI">EVI</option>
                             <option value="GNDVI">GNDVI</option>
                         </select>
                     </div>
+                    <div>
+                        <label className="block text-xs font-bold uppercase tracking-wide mb-2 text-slate-500">Satélite</label>
+                        <select
+                            value={satelliteSource}
+                            onChange={(e) => setSatelliteSource(e.target.value)}
+                            className="text-sm rounded-xl px-4 py-2.5 outline-none transition pr-10 bg-white border border-slate-200 text-slate-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 shadow-sm appearance-none"
+                            style={{ backgroundImage: "url(\"data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 1rem center", backgroundSize: "1em" }}
+                        >
+                            <option value="Sentinel-2">Sentinel-2 (10m - c/5 días)</option>
+                            <option value="Landsat">Landsat 8/9 (30m - c/8 días)</option>
+                        </select>
+                    </div>
 
                     <button
                         onClick={handleAnalizarSeries}
                         disabled={loadingBenchmark}
-                        className="btn-primary ml-auto"
+                        className="btn-primary ml-auto shadow-emerald-500/30 shadow-lg text-base px-6 py-2.5 rounded-xl border-none font-bold"
                     >
-                        {loadingBenchmark ? <Loader2 className="animate-spin" size={16} /> : <Play size={16} />}
+                        {loadingBenchmark ? <Loader2 className="animate-spin" size={18} /> : <Play size={18} />}
                         {loadingBenchmark ? "Procesando satélite…" : "Ejecutar Análisis"}
                     </button>
                 </div>
-
-                {errorBenchmark && (
-                    <div className="text-sm p-4 rounded-xl border" style={{ background: '#FFF0F0', borderColor: '#FFCDD2', color: '#B71C1C' }}>
-                        ⚠ {errorBenchmark}
-                    </div>
-                )}
-
-                {/* Chart */}
-                <div className="agro-card p-6 flex flex-col min-h-[450px]">
-                    {loadingBenchmark ? (
-                        <div className="flex-1 flex flex-col items-center justify-center gap-3">
-                            <Loader2 className="animate-spin" size={36} style={{ color: 'var(--color-primary)' }} />
-                            <p className="font-semibold" style={{ color: 'var(--color-text)' }}>Consultando Google Earth Engine…</p>
-                            <p className="text-sm" style={{ color: 'var(--color-muted)' }}>Puede tomar algunos segundos según la cantidad de lotes y rango temporal.</p>
-                        </div>
-                    ) : benchmarkData.length > 0 ? (
-                        <div className="w-full h-[400px] mt-2">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <LineChart data={benchmarkData} margin={{ top: 16, right: 24, left: 4, bottom: 24 }}>
-                                    <CartesianGrid strokeDasharray="0" vertical={false} stroke="var(--color-border)" />
-
-                                    <XAxis
-                                        dataKey="Fecha"
-                                        tick={{ fill: 'var(--color-text-secondary)', fontSize: 11 }}
-                                        tickFormatter={formatXAxisDate}
-                                        minTickGap={48}
-                                        tickMargin={10}
-                                        axisLine={{ stroke: 'var(--color-border)' }}
-                                        tickLine={false}
-                                    />
-
-                                    <YAxis
-                                        domain={['auto', 'auto']}
-                                        tick={{ fill: 'var(--color-text-secondary)', fontSize: 11 }}
-                                        tickMargin={8}
-                                        axisLine={false}
-                                        tickLine={false}
-                                    >
-                                        <Label
-                                            value={indexSelected}
-                                            angle={-90}
-                                            position="insideLeft"
-                                            style={{ textAnchor: 'middle', fill: 'var(--color-text-secondary)', fontWeight: 600, fontSize: 12 }}
-                                            offset={-2}
-                                        />
-                                    </YAxis>
-
-                                    <RechartsTooltip
-                                        labelFormatter={formatTooltipDate}
-                                        contentStyle={{ backgroundColor: 'white', borderRadius: '10px', border: '1px solid var(--color-border)', boxShadow: '0 8px 24px rgba(0,0,0,0.08)', fontSize: 12 }}
-                                        itemStyle={{ fontWeight: 500 }}
-                                    />
-                                    <Legend wrapperStyle={{ paddingTop: '16px', fontSize: 12 }} />
-
-                                    {/* Promedio global — thick dark line */}
-                                    <Line
-                                        type="monotone" dataKey="Promedio_Global"
-                                        stroke="var(--color-text)" strokeWidth={3}
-                                        dot={false}
-                                        activeDot={{ r: 5, fill: 'var(--color-text)', stroke: 'white', strokeWidth: 2 }}
-                                        name="Promedio"
-                                    />
-
-                                    {/* Individual lots — thin, semi-transparent */}
-                                    {benchmarkKeys.map((key, index) => (
-                                        <Line
-                                            key={key} type="monotone" dataKey={key}
-                                            stroke={AGRO_COLORS[index % AGRO_COLORS.length]}
-                                            strokeWidth={1.5} strokeOpacity={0.65}
-                                            dot={false}
-                                            activeDot={{ r: 4, strokeWidth: 0 }}
-                                            connectNulls={true}
-                                        />
-                                    ))}
-                                </LineChart>
-                            </ResponsiveContainer>
-                        </div>
-                    ) : (
-                        <div className="flex-1 flex flex-col items-center justify-center gap-2">
-                            <Activity size={40} style={{ color: 'var(--color-border)' }} />
-                            <p className="text-sm" style={{ color: 'var(--color-muted)' }}>Configurá las fechas y presioná <strong>Ejecutar Análisis</strong>.</p>
-                        </div>
-                    )}
-                </div>
             </div>
 
+            {errorBenchmark && (
+                <div className="text-sm p-4 rounded-xl border" style={{ background: '#FFF0F0', borderColor: '#FFCDD2', color: '#B71C1C' }}>
+                    ⚠ {errorBenchmark}
+                </div>
+            )}
+
+            {/* Chart */}
+            <div className="agro-card p-6 flex flex-col min-h-[450px]">
+                {loadingBenchmark ? (
+                    <div className="flex-1 flex flex-col items-center justify-center gap-3">
+                        <Loader2 className="animate-spin" size={36} style={{ color: 'var(--color-primary)' }} />
+                        <p className="font-semibold" style={{ color: 'var(--color-text)' }}>Consultando Google Earth Engine…</p>
+                        <p className="text-sm" style={{ color: 'var(--color-muted)' }}>Puede tomar algunos segundos según la cantidad de lotes y rango temporal.</p>
+                    </div>
+                ) : benchmarkData.length > 0 ? (
+                    <div className="w-full h-[400px] mt-2">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={benchmarkData} margin={{ top: 16, right: 24, left: 4, bottom: 24 }}>
+                                <CartesianGrid strokeDasharray="0" vertical={false} stroke="var(--color-border)" />
+
+                                <XAxis
+                                    dataKey="Fecha"
+                                    tick={{ fill: 'var(--color-text-secondary)', fontSize: 11 }}
+                                    tickFormatter={formatXAxisDate}
+                                    minTickGap={48}
+                                    tickMargin={10}
+                                    axisLine={{ stroke: 'var(--color-border)' }}
+                                    tickLine={false}
+                                />
+
+                                <YAxis
+                                    domain={['auto', 'auto']}
+                                    tick={{ fill: 'var(--color-text-secondary)', fontSize: 11 }}
+                                    tickMargin={8}
+                                    axisLine={false}
+                                    tickLine={false}
+                                >
+                                    <Label
+                                        value={indexSelected}
+                                        angle={-90}
+                                        position="insideLeft"
+                                        style={{ textAnchor: 'middle', fill: 'var(--color-text-secondary)', fontWeight: 600, fontSize: 12 }}
+                                        offset={-2}
+                                    />
+                                </YAxis>
+
+                                <RechartsTooltip
+                                    labelFormatter={formatTooltipDate}
+                                    contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(8px)', borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', fontSize: 13 }}
+                                    itemStyle={{ fontWeight: 600 }}
+                                />
+                                <Legend wrapperStyle={{ paddingTop: '20px', fontSize: 13, fontWeight: 500, color: 'var(--color-text-secondary)' }} />
+
+                                {/* Promedio global — thick dark line */}
+                                <Line
+                                    type="monotone" dataKey="Promedio_Global"
+                                    stroke="#0F172A" strokeWidth={4}
+                                    dot={false}
+                                    activeDot={{ r: 6, fill: '#0F172A', stroke: 'white', strokeWidth: 3 }}
+                                    name="Promedio Global"
+                                />
+
+                                {/* Individual lots — thin, semi-transparent */}
+                                {benchmarkKeys.map((key, index) => (
+                                    <Line
+                                        key={key} type="monotone" dataKey={key}
+                                        stroke={AGRO_COLORS[index % AGRO_COLORS.length]}
+                                        strokeWidth={1.5} strokeOpacity={0.65}
+                                        dot={false}
+                                        activeDot={{ r: 4, strokeWidth: 0 }}
+                                        connectNulls={true}
+                                    />
+                                ))}
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                ) : (
+                    <div className="flex-1 flex flex-col items-center justify-center gap-2">
+                        <Activity size={40} style={{ color: 'var(--color-border)' }} />
+                        <p className="text-sm" style={{ color: 'var(--color-muted)' }}>Configurá las fechas y presioná <strong>Ejecutar Análisis</strong>.</p>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

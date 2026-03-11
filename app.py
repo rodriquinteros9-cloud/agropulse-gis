@@ -955,30 +955,60 @@ def render_dashboard():
 
 if __name__ == "__main__":
     def render_portal():
-        # CSS para tarjetas y estetica
+        # CSS para tarjetas y estetica del portal
         st.markdown("""
         <style>
+        /* Estilos Premium para las Columnas del Portal (Tarjetas) */
         div[data-testid="column"] {
-            border: 1px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 20px;
-            background-color: rgba(240, 242, 246, 0.3);
-            box-shadow: 2px 2px 10px rgba(0,0,0,0.05);
-            transition: transform 0.2s ease;
+            border: 1px solid rgba(226, 232, 240, 0.8) !important;
+            border-radius: 20px !important;
+            padding: 32px !important;
+            background: rgba(255, 255, 255, 0.6) !important;
+            backdrop-filter: blur(12px) !important;
+            -webkit-backdrop-filter: blur(12px) !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03) !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
         div[data-testid="column"]:hover {
-            transform: scale(1.02);
-            border-color: #2ca02c;
+            transform: translateY(-6px) !important;
+            box-shadow: 0 20px 25px -5px rgba(16, 185, 129, 0.1), 0 8px 10px -6px rgba(16, 185, 129, 0.1) !important;
+            border-color: #34D399 !important;
+            background: rgba(255, 255, 255, 0.9) !important;
+        }
+        .portal-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #0F172A 0%, #10B981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.03em;
         }
         .subtitle {
-            color: gray;
+            color: #64748B;
             text-align: center;
-            margin-bottom: 2rem;
+            margin-bottom: 3rem;
+            font-size: 1.25rem;
+            font-weight: 400;
+            letter-spacing: 0em;
+        }
+        .block-container div[data-testid="column"] h3 {
+            color: #0F172A;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .block-container div[data-testid="column"] p {
+            color: #64748B;
+            font-size: 1.05rem;
         }
         </style>
         """, unsafe_allow_html=True)
         
-        st.markdown("<h1 style='text-align: center;'># 🌱 AgroPulse</h1>", unsafe_allow_html=True)
+        st.markdown("<h1 class='portal-title'>🌱 AgroPulse</h1>", unsafe_allow_html=True)
         st.markdown("<h4 class='subtitle'>Plataforma satelital de monitoreo de cultivos</h4>", unsafe_allow_html=True)
         
         has_files = st.session_state.get('saved_gdf') is not None
@@ -1026,71 +1056,161 @@ if __name__ == "__main__":
     def main():
         st.set_page_config(page_title="AgroPulse Dashboard", page_icon="🌱", layout="wide")
         
-        # Inyección de CSS Global para modernizar la tipografía y suavizar la interfaz
+        # Inyección de CSS Global de Alta Gama (Stitch Reference)
         st.markdown("""
         <style>
-        /* Importar fuente moderna y profesional (Inter) */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         
         html, body, [class*="css"] {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', sans-serif !important;
         }
-        
-        /* Reducir el padding superior y hacer la app más panorámica */
+
+        /* Fondo general más limpio y premium */
+        .stApp {
+            background-color: #F8FAFC;
+        }
+
+        /* Padding ajustado para layout amplio */
         .block-container {
             padding-top: 2rem;
-            padding-bottom: 2rem;
+            padding-bottom: 3rem;
+            max-width: 1400px;
         }
-        
-        /* Estilizar las tarjetas numéricas (st.metric) con color corporativo */
+
+        /* Modificación profunda del Header y Sidebar */
+        header[data-testid="stHeader"] {
+            background: transparent !important;
+        }
+        section[data-testid="stSidebar"] {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 2px 0 15px rgba(0,0,0,0.02);
+        }
+
+        /* Tarjetas Numéricas (st.metric) Premium */
+        div[data-testid="metric-container"] {
+            background: #FFFFFF !important;
+            border: 1px solid rgba(226, 232, 240, 0.8) !important;
+            border-radius: 16px !important;
+            padding: 24px !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03) !important;
+            transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+        }
+        div[data-testid="metric-container"]:hover {
+            transform: translateY(-4px) !important;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04) !important;
+            border-color: #10B981 !important;
+        }
         [data-testid="stMetricValue"] {
-            font-size: 1.8rem !important;
-            font-weight: 700 !important;
+            font-size: 2.2rem !important;
+            font-weight: 800 !important;
+            color: #0F172A !important;
+            letter-spacing: -0.02em;
+        }
+        [data-testid="stMetricLabel"] {
+            font-size: 0.95rem !important;
+            font-weight: 500 !important;
+            color: #64748B !important;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+
+        /* Botones Modernos */
+        .stButton>button {
+            border-radius: 10px !important;
+            font-weight: 600 !important;
+            padding: 0.5rem 1rem !important;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            border: 1px solid #E2E8F0 !important;
+            background-color: white !important;
+            color: #0F172A !important;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+        }
+        .stButton>button:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.15), 0 4px 6px -4px rgba(16, 185, 129, 0.1) !important;
+            border-color: #10B981 !important;
             color: #10B981 !important;
         }
-        
-        /* Suavizar los bordes de botones y expanders */
-        .stExpander, .stButton>button {
-            border-radius: 8px !important;
-            transition: all 0.2s ease-in-out;
+        .stButton>button:active {
+            transform: translateY(0) !important;
         }
         
-        /* Efecto hover suave en los botones */
-        .stButton>button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        /* Botones primarios (Primary) */
+        .stButton>button[kind="primary"] {
+            background-color: #10B981 !important;
+            color: white !important;
+            border: none !important;
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3), 0 2px 4px -2px rgba(16, 185, 129, 0.2) !important;
+        }
+        .stButton>button[kind="primary"]:hover {
+            background-color: #059669 !important;
+            box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.4), 0 4px 6px -4px rgba(16, 185, 129, 0.2) !important;
+            color: white !important;
+            border-color: transparent !important;
+        }
+
+        /* Inputs y Selectores limpios */
+        .stSelectbox>div>div, .stTextInput>div>div, .stDateInput>div>div, .stNumberInput>div>div {
+            border-radius: 10px !important;
+            border: 1px solid #CBD5E1 !important;
+            background-color: #FFFFFF !important;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.01) !important;
+            transition: border-color 0.2s, box-shadow 0.2s !important;
+        }
+        .stSelectbox>div>div:focus-within, .stTextInput>div>div:focus-within, .stDateInput>div>div:focus-within, .stNumberInput>div>div:focus-within {
+            border-color: #10B981 !important;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+        }
+
+        /* Expanders premium */
+        .stExpander {
+            border-radius: 12px !important;
+            border: 1px solid #E2E8F0 !important;
+            background: #FFFFFF !important;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05) !important;
+            overflow: hidden;
+        }
+        .stExpander:hover {
+            border-color: #CBD5E1 !important;
         }
         
-        /* Estetica limpia para los selectores (dropdowns) */
-        .stSelectbox>div>div {
-            border-radius: 8px;
-        }
-        
-        /* Diseño moderno para las pestañas/tabs */
+        /* Pestañas (Tabs) refinadas */
         .stTabs [data-baseweb="tab-list"] {
-            gap: 24px;
-            border-bottom: 2px solid #E2E8F0;
+            gap: 8px;
+            border-bottom: 2px solid #F1F5F9;
+            margin-bottom: 24px;
         }
         .stTabs [data-baseweb="tab"] {
-            height: 50px;
-            white-space: pre-wrap;
-            background-color: transparent !important;
+            height: auto;
+            padding: 12px 20px;
+            border-radius: 8px 8px 0 0;
             font-weight: 600;
-            padding: 10px 16px;
+            color: #64748B;
+            transition: all 0.2s ease;
+        }
+        .stTabs [data-baseweb="tab"]:hover {
+            background-color: #F8FAFC !important;
+            color: #0F172A !important;
         }
         .stTabs [aria-selected="true"] {
             color: #10B981 !important;
             border-bottom-color: #10B981 !important;
+            background-color: transparent !important;
         }
-        
-        /* Animaciones para las barras de progreso */
+
+        /* Progress bar smooth */
         .stProgress > div > div > div > div {
-            background-color: #10B981 !important;
-            border-radius: 10px;
+            background: linear-gradient(90deg, #10B981, #34D399) !important;
+            border-radius: 999px !important;
         }
         .stProgress > div > div > div {
-            border-radius: 10px;
-            background-color: #E2E8F0;
+            border-radius: 999px !important;
+            background-color: #E2E8F0 !important;
+            height: 8px !important;
         }
         </style>
         """, unsafe_allow_html=True)

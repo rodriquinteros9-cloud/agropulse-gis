@@ -26,6 +26,7 @@ class RequerimientoAnalisis(BaseModel):
     fecha_inicio: datetime.date
     fecha_fin: datetime.date
     indice: str = "NDVI"
+    satellite: str = "Sentinel-2"   # Sentinel-2, Landsat, MODIS, Mix
     force_refresh: bool = False   # Si True, ignora el caché y recalcula en EE
 
 
@@ -99,7 +100,7 @@ async def calcular_serie_individual(req: RequerimientoAnalisis):
         
         # Extraer a DataFrame
         df = get_timeseries(geojson_poly, req.fecha_inicio, req.fecha_fin, req.indice,
-                            use_cache=not req.force_refresh)
+                            satellite=req.satellite, use_cache=not req.force_refresh)
         if df.empty:
             return {"status": "success", "data": []}
             
@@ -122,7 +123,7 @@ async def calcular_serie_benchmark(req: RequerimientoAnalisis):
         gdf_lotes.set_crs(epsg=4326, inplace=True)
         
         # Se bloquea sincrónicamente hasta que Earth Engine devuelva
-        df_bench = get_benchmark_timeseries(gdf_lotes, req.fecha_inicio, req.fecha_fin, req.indice)
+        df_bench = get_benchmark_timeseries(gdf_lotes, req.fecha_inicio, req.fecha_fin, req.indice, satellite=req.satellite)
         
         if df_bench is None or df_bench.empty:
             return {"status": "success", "data": []}

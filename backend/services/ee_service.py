@@ -24,10 +24,10 @@ except Exception as e:
 _timeseries_cache: dict = {}
 CACHE_TTL_HOURS = 24   # Las entradas viven 24h antes de recalcularse
 
-def _make_cache_key(coords, start_date, end_date, index_name) -> str:
-    """Genera una clave única y reproducible para la combinación lote+fechas+índice."""
+def _make_cache_key(coords, start_date, end_date, index_name, satellite="Sentinel-2") -> str:
+    """Genera una clave única y reproducible para la combinación lote+fechas+índice+satelite."""
     geom_str = json.dumps(coords, sort_keys=True)
-    raw = f"{geom_str}|{start_date}|{end_date}|{index_name}"
+    raw = f"{geom_str}|{start_date}|{end_date}|{index_name}|{satellite}"
     return hashlib.md5(raw.encode()).hexdigest()
 
 def _get_from_cache(key: str):
@@ -58,10 +58,11 @@ def get_cache_stats() -> dict:
     return {"total_entries": len(_timeseries_cache), "active_entries": active}
 # ─────────────────────────────────────────────────────────────────────────────
 
-def get_timeseries(poly_geojson, start_date, end_date, index_name="NDVI", use_cache=True):
+def get_timeseries(poly_geojson, start_date, end_date, index_name="NDVI", satellite="Sentinel-2", use_cache=True):
     """Extrae la serie temporal del índice dado para un polígono.
     
     Args:
+        satellite: Sentinel-2, Landsat, MODIS, Mix
         use_cache: Si True (defecto), retorna resultado cacheado si existe.
                    Si False, fuerza recalculo en EE e invalida la entrada anterior.
     """
@@ -69,7 +70,7 @@ def get_timeseries(poly_geojson, start_date, end_date, index_name="NDVI", use_ca
     coords = poly_geojson['coordinates'][0]
 
     # ── Verificar caché ANTES de llamar a EE ──────────────────────────────────
-    cache_key = _make_cache_key(coords, start_date, end_date, index_name)
+    cache_key = _make_cache_key(coords, start_date, end_date, index_name, satellite)
     if use_cache:
         cached = _get_from_cache(cache_key)
         if cached is not None:
@@ -85,33 +86,66 @@ def get_timeseries(poly_geojson, start_date, end_date, index_name="NDVI", use_ca
         
     roi = ee.Geometry.Polygon(coords)
 
-    # Filtrar la colección de Sentinel-2 (Harmonized)
-    collection = (ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
-                  .filterBounds(roi)
-                  .filterDate(start_date.strftime('%Y-%m-%d'), 
-                              end_date.strftime('%Y-%m-%d'))
-                  .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 20)))
+    # ── Helpers for Harmonization ──
+    def prep_sentinel2(img):
+        # S2: Blue=B2, Green=B3, Red=B4, NIR=B8
+        return img.select(['B2', 'B3', 'B4', 'B8'], ['BLUE', 'GREEN', 'RED', 'NIR']).set('sat', 'S2')
+        
+    def prep_landsat(img):
+        # L8/L9: Blue=SR_B2, Green=SR_B3, Red=SR_B4, NIR=SR_B5
+        optical = img.select(['SR_B2', 'SR_B3', 'SR_B4', 'SR_B5']).multiply(0.0000275).add(-0.2)
+        # Rename them properly
+        return optical.rename(['BLUE', 'GREEN', 'RED', 'NIR']) \
+            .set('system:time_start', img.get('system:time_start')) \
+            .set('sat', 'L89')
+
+    # ── Collections ──
+    s2_col = (ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
+                 .filterBounds(roi)
+                 .filterDate(start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
+                 .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 20))
+                 .map(prep_sentinel2))
+                 
+    l8_col = (ee.ImageCollection('LANDSAT/LC08/C02/T1_L2')
+                 .filterBounds(roi)
+                 .filterDate(start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
+                 .filter(ee.Filter.lt('CLOUD_COVER', 20))
+                 .map(prep_landsat))
+    l9_col = (ee.ImageCollection('LANDSAT/LC09/C02/T1_L2')
+                 .filterBounds(roi)
+                 .filterDate(start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
+                 .filter(ee.Filter.lt('CLOUD_COVER', 20))
+                 .map(prep_landsat))
+
+    # ── Switch based on requested satellite ──
+    if satellite == "Sentinel-2":
+        collection = s2_col
+    elif satellite == "Landsat":
+        collection = l8_col.merge(l9_col)
+    else:
+        # Fallback
+        collection = s2_col
 
     # Mapear función para calcular el índice
     def calculate_index(image):
         if index_name == "NDVI":
-            index_img = image.normalizedDifference(['B8', 'B4']).rename(index_name)
+            index_img = image.normalizedDifference(['NIR', 'RED']).rename(index_name)
         elif index_name == "EVI":
             # EVI = 2.5 * ((NIR - Red) / (NIR + 6 * Red - 7.5 * Blue + 1))
-            nir = image.select('B8')
-            red = image.select('B4')
-            blue = image.select('B2')
+            nir = image.select('NIR')
+            red = image.select('RED')
+            blue = image.select('BLUE')
             index_img = image.expression(
-                '2.5 * ((NIR - RED) / (NIR + 6 * RED - 7.5 * BLUE + 10000))', {
+                '2.5 * ((NIR - RED) / (NIR + 6 * RED - 7.5 * BLUE + 1.0))', {
                     'NIR': nir,
                     'RED': red,
                     'BLUE': blue
                 }).rename(index_name)
         elif index_name == "GNDVI":
             # GNDVI = (NIR - Green) / (NIR + Green)
-            index_img = image.normalizedDifference(['B8', 'B3']).rename(index_name)
+            index_img = image.normalizedDifference(['NIR', 'GREEN']).rename(index_name)
         else:
-            index_img = image.normalizedDifference(['B8', 'B4']).rename("NDVI") # fallback
+            index_img = image.normalizedDifference(['NIR', 'RED']).rename("NDVI") # fallback
             
         # Añadir banda de fecha
         return image.addBands(index_img).set('system:time_start', image.get('system:time_start'))
@@ -173,7 +207,7 @@ def get_timeseries(poly_geojson, start_date, end_date, index_name="NDVI", use_ca
     # ─────────────────────────────────────────────────────────────────────────
     return df
 
-def get_benchmark_timeseries(gdf_lotes, start_date, end_date, index_name="NDVI"):
+def get_benchmark_timeseries(gdf_lotes, start_date, end_date, index_name="NDVI", satellite="Sentinel-2"):
     """
     Calcula la serie temporal media para cada lote iterativamente para evitar 
     errores de Timeout (Computation timed out) de Earth Engine en cuentas gratuitas,
@@ -212,7 +246,7 @@ def get_benchmark_timeseries(gdf_lotes, start_date, end_date, index_name="NDVI")
             }
             
             # Llamada síncrona/bloqueante a EE (ideal para hilos)
-            df_lote = get_timeseries(poly_geojson, start_date, end_date, index_name)
+            df_lote = get_timeseries(poly_geojson, start_date, end_date, index_name, satellite)
             
             if not df_lote.empty:
                 # Solo nos importa la media para el benchmark

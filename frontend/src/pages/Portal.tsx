@@ -64,11 +64,11 @@ export default function Portal({ setAppState }: { setAppState: any }) {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-green-950 to-slate-900 flex flex-col items-center justify-center p-6 relative overflow-hidden">
+        <div className="min-h-screen bg-[#F0FDF4] flex flex-col items-center justify-center p-6 relative overflow-hidden">
 
             {/* Decorative background blobs */}
-            <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-primary/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-emerald-300/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-blue-300/10 rounded-full blur-3xl pointer-events-none" />
 
             {/* Logo / Brand */}
             <div className="text-center mb-10 relative z-10">
@@ -81,42 +81,42 @@ export default function Portal({ setAppState }: { setAppState: any }) {
 
             {/* ── FASE 1: Uploader ─────────────────────────────────────────── */}
             {!isUploaded ? (
-                <div className="relative z-10 w-full max-w-lg">
+                <div className="relative z-10 w-full max-w-xl">
                     <div
                         onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
                         onDragLeave={() => setIsDragOver(false)}
                         onDrop={handleDrop}
                         onClick={() => !loading && fileInputRef.current?.click()}
                         className={`
-                            group cursor-pointer rounded-3xl border-2 border-dashed p-10 flex flex-col items-center text-center transition-all duration-300
+                            group cursor-pointer rounded-[24px] border border-slate-200/80 p-12 flex flex-col items-center text-center transition-all duration-300 shadow-xl
                             ${isDragOver
-                                ? 'border-primary bg-primary/10 scale-[1.02]'
-                                : 'border-slate-600 bg-white/5 hover:border-primary/60 hover:bg-white/10'
+                                ? 'border-emerald-500 bg-emerald-50/80 scale-[1.02] shadow-emerald-500/20'
+                                : 'bg-white/70 backdrop-blur-xl hover:border-emerald-400 hover:bg-white/90 hover:shadow-2xl hover:-translate-y-1'
                             }
                         `}
                     >
-                        <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-5 transition-all duration-300 ${isDragOver ? 'bg-primary scale-110' : 'bg-slate-800 group-hover:bg-primary/20'}`}>
+                        <div className={`w-24 h-24 rounded-3xl flex items-center justify-center mb-6 transition-all duration-300 shadow-sm ${isDragOver ? 'bg-emerald-500 scale-110 shadow-emerald-500/30' : 'bg-emerald-50 group-hover:bg-emerald-100/80'}`}>
                             {loading
-                                ? <Loader2 size={36} className="text-primary animate-spin" />
-                                : <UploadCloud size={36} className={`transition-colors ${isDragOver ? 'text-white' : 'text-slate-400 group-hover:text-primary'}`} />
+                                ? <Loader2 size={40} className="text-emerald-500 animate-spin" />
+                                : <UploadCloud size={40} className={`transition-colors ${isDragOver ? 'text-white' : 'text-emerald-600 group-hover:text-emerald-700'}`} />
                             }
                         </div>
 
                         {loading ? (
                             <>
-                                <p className="text-white font-bold text-xl mb-1">Procesando lotes...</p>
-                                <p className="text-slate-400 text-sm">Validando geometrías y calculando métricas</p>
+                                <p className="text-slate-800 font-extrabold text-2xl mb-1 tracking-tight">Procesando lotes...</p>
+                                <p className="text-slate-500 text-sm font-medium">Validando geometrías y calculando métricas espaciales</p>
                             </>
                         ) : (
                             <>
-                                <p className="text-white font-bold text-xl mb-2">
+                                <p className="text-slate-800 font-extrabold text-2xl mb-2 tracking-tight">
                                     {isDragOver ? 'Soltar archivo aquí' : 'Cargar archivo de lotes'}
                                 </p>
-                                <p className="text-slate-400 text-sm mb-4">
+                                <p className="text-slate-500 text-base mb-6 font-medium">
                                     Arrastrá o hacé clic para seleccionar
                                 </p>
-                                <span className="inline-flex items-center gap-2 text-xs text-slate-500 bg-slate-800 px-3 py-1.5 rounded-full">
-                                    <FileBox size={12} /> .KML · .GeoJSON · .JSON
+                                <span className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 bg-slate-100 px-4 py-2 rounded-full border border-slate-200 uppercase tracking-wide">
+                                    <FileBox size={14} /> .KML · .GeoJSON · .JSON
                                 </span>
                             </>
                         )}
@@ -131,28 +131,30 @@ export default function Portal({ setAppState }: { setAppState: any }) {
                     </div>
 
                     {errorMsg && (
-                        <div className="mt-4 flex items-start gap-2 bg-red-950/60 border border-red-800 text-red-300 text-sm p-4 rounded-2xl">
-                            <X size={16} className="shrink-0 mt-0.5" />
+                        <div className="mt-6 flex items-start gap-3 bg-red-50 border border-red-200 text-red-600 text-sm font-medium p-4 rounded-2xl shadow-sm">
+                            <X size={18} className="shrink-0 mt-0.5" />
                             <span>{errorMsg}</span>
                         </div>
                     )}
 
-                    <p className="text-center text-slate-600 text-xs mt-6">
+                    <p className="text-center text-slate-400 text-sm mt-8 font-medium">
                         Los datos son procesados localmente. Nada se almacena en la nube.
                     </p>
                 </div>
 
             ) : (
                 /* ── FASE 2: Módulos revelados ───────────────────────────────── */
-                <div className="relative z-10 w-full max-w-3xl animate-in fade-in slide-in-from-bottom-6 duration-700">
+                <div className="relative z-10 w-full max-w-4xl animate-in fade-in slide-in-from-bottom-6 duration-700">
 
                     {/* Confirmación de carga */}
-                    <div className="flex items-center justify-between bg-green-950/60 border border-green-800 rounded-2xl px-5 py-3 mb-8">
-                        <div className="flex items-center gap-3">
-                            <CheckCircle2 size={20} className="text-primary shrink-0" />
+                    <div className="flex items-center justify-between bg-white/80 backdrop-blur-md border border-emerald-100 shadow-sm rounded-2xl px-6 py-4 mb-10">
+                        <div className="flex items-center gap-4">
+                            <div className="bg-emerald-100 p-2 rounded-full">
+                                <CheckCircle2 size={24} className="text-emerald-600 shrink-0" />
+                            </div>
                             <div>
-                                <p className="text-white font-semibold text-sm">{fileName}</p>
-                                <p className="text-green-400 text-xs">
+                                <p className="text-slate-800 font-bold text-base">{fileName}</p>
+                                <p className="text-slate-500 text-sm font-medium">
                                     {metadata?.feature_count} lote{metadata?.feature_count !== 1 ? 's' : ''} cargado{metadata?.feature_count !== 1 ? 's' : ''} — {metadata?.total_area_ha?.toFixed(1)} ha totales
                                 </p>
                             </div>
@@ -160,34 +162,34 @@ export default function Portal({ setAppState }: { setAppState: any }) {
                         <button
                             onClick={handleReset}
                             title="Cargar otro archivo"
-                            className="text-slate-500 hover:text-slate-300 transition-colors p-1"
+                            className="bg-slate-100 text-slate-500 hover:text-slate-800 hover:bg-slate-200 transition-colors p-2 rounded-full"
                         >
-                            <X size={16} />
+                            <X size={18} />
                         </button>
                     </div>
 
                     {/* Título */}
-                    <p className="text-center text-slate-400 text-sm mb-6 font-medium">
+                    <p className="text-center text-slate-500 text-lg mb-8 font-semibold tracking-tight">
                         ¿Qué módulo deseas explorar?
                     </p>
 
                     {/* Cards de módulos */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {/* Ranking */}
                         <button
                             onClick={() => navigate("/dashboard/ranking")}
-                            className="group relative bg-white/5 hover:bg-blue-500/10 border border-slate-700 hover:border-blue-500/50 rounded-3xl p-8 flex flex-col items-center text-center gap-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-blue-500/10"
+                            className="group relative bg-white/70 backdrop-blur-xl border border-slate-200 hover:border-emerald-400 rounded-3xl p-10 flex flex-col items-center text-center gap-5 transition-all duration-300 hover:scale-[1.03] hover:shadow-2xl hover:shadow-emerald-500/10 hover:-translate-y-2 shadow-lg"
                         >
-                            <div className="w-16 h-16 rounded-2xl bg-blue-500/20 group-hover:bg-blue-500/30 flex items-center justify-center transition-colors">
-                                <BarChart3 size={32} className="text-blue-400" />
+                            <div className="w-20 h-20 rounded-3xl bg-blue-50 group-hover:bg-blue-100 flex items-center justify-center transition-colors shadow-sm">
+                                <BarChart3 size={36} className="text-blue-600" />
                             </div>
                             <div>
-                                <h3 className="text-white font-bold text-xl mb-1">Ranking de Lotes</h3>
-                                <p className="text-slate-400 text-sm leading-relaxed">
+                                <h3 className="text-slate-900 font-extrabold text-2xl mb-2 tracking-tight">Ranking de Lotes</h3>
+                                <p className="text-slate-600 text-base leading-relaxed font-medium">
                                     Comparativa de índices productivos y suelos en todos tus lotes simultáneamente.
                                 </p>
                             </div>
-                            <span className="text-xs text-blue-400/70 font-medium mt-auto">
+                            <span className="text-sm text-blue-600 font-bold mt-auto uppercase tracking-wider">
                                 Índice Productivo · Benchmark NDVI →
                             </span>
                         </button>
@@ -195,18 +197,18 @@ export default function Portal({ setAppState }: { setAppState: any }) {
                         {/* Análisis Individual */}
                         <button
                             onClick={() => navigate("/dashboard/analysis")}
-                            className="group relative bg-white/5 hover:bg-primary/10 border border-slate-700 hover:border-primary/50 rounded-3xl p-8 flex flex-col items-center text-center gap-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-primary/10"
+                            className="group relative bg-white/70 backdrop-blur-xl border border-slate-200 hover:border-emerald-400 rounded-3xl p-10 flex flex-col items-center text-center gap-5 transition-all duration-300 hover:scale-[1.03] hover:shadow-2xl hover:shadow-emerald-500/10 hover:-translate-y-2 shadow-lg"
                         >
-                            <div className="w-16 h-16 rounded-2xl bg-primary/20 group-hover:bg-primary/30 flex items-center justify-center transition-colors">
-                                <Activity size={32} className="text-primary" />
+                            <div className="w-20 h-20 rounded-3xl bg-emerald-50 group-hover:bg-emerald-100 flex items-center justify-center transition-colors shadow-sm">
+                                <Activity size={36} className="text-emerald-600" />
                             </div>
                             <div>
-                                <h3 className="text-white font-bold text-xl mb-1">Análisis Individual</h3>
-                                <p className="text-slate-400 text-sm leading-relaxed">
+                                <h3 className="text-slate-900 font-extrabold text-2xl mb-2 tracking-tight">Análisis Individual</h3>
+                                <p className="text-slate-600 text-base leading-relaxed font-medium">
                                     Monitoreo profundo de vigor NDVI, clima, y aptitud para pulverización por lote.
                                 </p>
                             </div>
-                            <span className="text-xs text-primary/70 font-medium mt-auto">
+                            <span className="text-sm text-emerald-600 font-bold mt-auto uppercase tracking-wider">
                                 NDVI · ΔT · Fitosanitarios →
                             </span>
                         </button>
