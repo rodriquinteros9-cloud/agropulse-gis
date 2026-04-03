@@ -4,6 +4,15 @@ python-multipart
 geopandas
 pandas
 earthengine-api
-requests
+requests==2.31.0
+urllib3==2.2.0
+chardet==5.0.0
 shapely
 pyogrio
+matplotlib
+python-dotenv
+numpy
+httpx
+beautifulsoup4
+playwright
+openpyxl

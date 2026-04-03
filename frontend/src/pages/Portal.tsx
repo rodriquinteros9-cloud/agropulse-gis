@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UploadCloud, Activity, BarChart3, Loader2, CheckCircle2, FileBox, X } from 'lucide-react';
+import { UploadCloud, Activity, BarChart3, Loader2, CheckCircle2, FileBox, X, ClipboardList } from 'lucide-react';
 
 export default function Portal({ setAppState }: { setAppState: any }) {
     const [loading, setLoading] = useState(false);
@@ -174,7 +174,7 @@ export default function Portal({ setAppState }: { setAppState: any }) {
                     </p>
 
                     {/* Cards de módulos */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         {/* Ranking */}
                         <button
                             onClick={() => navigate("/dashboard/ranking")}
@@ -210,6 +210,25 @@ export default function Portal({ setAppState }: { setAppState: any }) {
                             </div>
                             <span className="text-sm text-emerald-600 font-bold mt-auto uppercase tracking-wider">
                                 NDVI · ΔT · Fitosanitarios →
+                            </span>
+                        </button>
+
+                        {/* Planificacion */}
+                        <button
+                            onClick={() => navigate("/dashboard/planning")}
+                            className="group relative bg-white/70 backdrop-blur-xl border border-slate-200 hover:border-emerald-400 rounded-3xl p-10 flex flex-col items-center text-center gap-5 transition-all duration-300 hover:scale-[1.03] hover:shadow-2xl hover:shadow-emerald-500/10 hover:-translate-y-2 shadow-lg"
+                        >
+                            <div className="w-20 h-20 rounded-3xl bg-amber-50 group-hover:bg-amber-100 flex items-center justify-center transition-colors shadow-sm">
+                                <ClipboardList size={36} className="text-amber-600" />
+                            </div>
+                            <div>
+                                <h3 className="text-slate-900 font-extrabold text-2xl mb-2 tracking-tight">Planificación</h3>
+                                <p className="text-slate-600 text-base leading-relaxed font-medium">
+                                    Asignación de cultivos interactiva por lote en base a su índice productivo (IP).
+                                </p>
+                            </div>
+                            <span className="text-sm text-amber-600 font-bold mt-auto uppercase tracking-wider">
+                                Gestión de Campaña →
                             </span>
                         </button>
                     </div>

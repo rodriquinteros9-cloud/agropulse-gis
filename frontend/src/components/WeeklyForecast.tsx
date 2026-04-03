@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, Wind, Droplets, Thermometer, CloudRain, CheckCircle, AlertTriangle, XCircle, Clock } from 'lucide-react';
+import { useState } from 'react';
+import { ChevronDown, ChevronUp, Wind, Droplets, CheckCircle, AlertTriangle, XCircle, Clock } from 'lucide-react';
 
 // ─── Tipos ──────────────────────────────────────────────────────────────────
 interface HourData {

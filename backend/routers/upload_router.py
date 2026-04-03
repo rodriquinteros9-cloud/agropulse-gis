@@ -49,12 +49,13 @@ def _precompute_timeseries_for_lotes(geojson_dict: dict):
 @router.post("/upload-lotes")
 async def upload_lotes(file: UploadFile = File(...), background_tasks: BackgroundTasks = BackgroundTasks()):
     """Recibe un archivo KML/GeoJSON, extrae geometrias y calcula estadisticas base."""
-    if not (file.filename.endswith('.kml') or file.filename.endswith('.geojson') or file.filename.endswith('.json')):
+    filename = file.filename or ""
+    if not (filename.endswith('.kml') or filename.endswith('.geojson') or filename.endswith('.json')):
         raise HTTPException(status_code=400, detail="Formato no soportado. Use .kml o .geojson")
         
     try:
         content = await file.read()
-        gdf = load_spatial_data_from_bytes(content, file.filename)
+        gdf = load_spatial_data_from_bytes(content, filename)
         
         if gdf is None or gdf.empty:
             raise HTTPException(status_code=400, detail="Archivo vacío o sin geometrías válidas.")

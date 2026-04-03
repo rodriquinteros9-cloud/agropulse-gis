@@ -1,18 +1,19 @@
 # 🌍 Dashboard de Lotes - Dashboard GIS 🏘️
 
-A premium, interactive GIS dashboard built with **Streamlit**, designed for managing and visualizing lot data with high precision and rich aesthetics.
+A premium, interactive GIS dashboard built with **React, Vite, and FastAPI**, designed for managing and visualizing lot data with high precision and rich aesthetics.
 
 ## ✨ Features
-- 📊 **Interactive GIS Visualization**: Map-centric interface for lot management.
-- 🏢 **Backend Integration**: Robust logic for data processing.
-- 🎨 **Modern UI/UX**: Sleek, responsive design with polished components.
-- ⚡ **Real-time Updates**: Instant data reflects on the dashboard.
+- 📊 **Interactive GIS Visualization**: Map-centric interface for lot management using Leaflet.
+- 🏢 **Backend Integration**: Robust logic for data processing out of Earth Engine.
+- 🎨 **Modern UI/UX**: Sleek, responsive design with polished components using Tailwind CSS.
+- ⚡ **Real-time Updates**: Fast data processing and seamless dashboard updates.
 
 ## 🚀 Getting Started
 
 Follow these steps to get the dashboard running locally:
 
 ### ⚙️ Prerequisites
+- Node.js (v18+)
 - Python 3.8+
 - [Pip](https://pip.pypa.io/en/stable/installation/)
 
@@ -24,22 +25,23 @@ Follow these steps to get the dashboard running locally:
    cd dashboard-lotes
    ```
 
-2. **Install dependencies:**
+2. **Start the Backend (FastAPI):**
    ```bash
+   cd backend
    pip install -r requirements.txt
+   uvicorn main:app --reload
    ```
 
-3. **Run the Dashboard:**
+3. **Start the Frontend (React):**
    ```bash
-   streamlit run app.py
+   cd frontend
+   npm install
+   npm run dev
    ```
 
 ## 📂 Project Structure
-- `app.py`: Main entry point for the Streamlit application.
-- `backend/`: Data processing and GIS logic.
-- `frontend/`: Custom frontend enhancements and assets.
-- `requirements.txt`: Project dependencies.
-- `.streamlit/`: Configuration and theme settings.
+- `backend/`: Data processing and GIS logic using FastAPI.
+- `frontend/`: Custom frontend UI, React components, and 3rd party integrations.
 
 ## 🛡️ License
 Distributed under the MIT License. See `LICENSE` for more information.

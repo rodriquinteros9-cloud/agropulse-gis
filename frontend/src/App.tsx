@@ -3,6 +3,7 @@ import Portal from './pages/Portal';
 import DashboardLayout from './pages/DashboardLayout';
 import Ranking from './pages/Ranking';
 import Analysis from './pages/Analysis';
+import Planning from './pages/Planning';
 import { useState } from 'react';
 
 // Global State shape
@@ -15,6 +16,8 @@ export interface AppState {
    */
   moduleCache: {
     rankingData?: any[];                        // Resultados del ranking IDECOR
+    advancedRankingData?: any[];                // Resultados de Agua Util y COS
+    advancedRankingMeta?: any | null;           // Metadata AU (fuente, fecha, url)
     benchmarkData?: Record<string, any[]>;      // key = startDate|endDate|index
     analysisTimeSeries?: Record<string, any[]>; // key = lotId|startDate|endDate, value = data
     weatherData?: Record<string, any>;          // key = lotId, value = weatherData
@@ -38,6 +41,7 @@ function App() {
           <Route index element={<Navigate to="ranking" replace />} />
           <Route path="ranking" element={<Ranking appState={appState} setAppState={setAppState} />} />
           <Route path="analysis" element={<Analysis appState={appState} setAppState={setAppState} />} />
+          <Route path="planning" element={<Planning appState={appState} setAppState={setAppState} />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

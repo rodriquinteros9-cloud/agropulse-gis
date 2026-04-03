@@ -177,6 +177,23 @@
   box-shadow: 4px 0 24px -5px rgba(0, 0, 0, 0.02);
 }
 
+/* ── Collapsible sidebar ── */
+.sidebar-collapsible {
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  z-index: 40;
+}
+
+/* Fade-in for labels and extra content when sidebar expands */
+@keyframes sidebarFadeIn {
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.sidebar-fade-in {
+  animation: sidebarFadeIn 0.25s ease forwards;
+}
+
 .sidebar-nav-item {
   display: flex;
   align-items: center;
@@ -189,10 +206,20 @@
   color: var(--color-text-secondary);
 }
 
+/* Collapsed: center icons */
+.sidebar-nav-item.sidebar-nav-collapsed {
+  justify-content: center;
+  padding: 0.7rem;
+}
+
 .sidebar-nav-item:hover {
   background: rgba(241, 245, 249, 0.8);
   color: var(--color-text);
   transform: translateX(4px);
+}
+
+.sidebar-nav-item.sidebar-nav-collapsed:hover {
+  transform: none;
 }
 
 .sidebar-nav-item.active {
@@ -200,6 +227,23 @@
   color: var(--color-primary-dark);
   font-weight: 700;
   box-shadow: inset 3px 0 0 var(--color-primary);
+}
+
+.sidebar-nav-item.sidebar-nav-collapsed.active {
+  box-shadow: none;
+  position: relative;
+}
+
+.sidebar-nav-item.sidebar-nav-collapsed.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--color-primary);
 }
 
 /* ─── Scrollbar ───────────────────────────────────────────────────────────── */
@@ -230,4 +274,128 @@
 .recharts-legend-item-text {
   color: var(--color-text-secondary) !important;
   font-size: 13px;
+}
+
+/* ─── Phytosanitary Advisor ──────────────────────────────────────────────── */
+.phyto-advisor {
+  background: white;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+/* ─── Print / PDF Export ─────────────────────────────────────────────────── */
+@media print {
+  /* Reset page */
+  @page {
+    size: landscape;
+    margin: 12mm 10mm;
+  }
+
+  body {
+    background: white !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    font-size: 11px !important;
+  }
+
+  /* Hide nav/sidebar/chrome */
+  .sidebar,
+  .sidebar-collapsible,
+  nav,
+  header,
+  footer {
+    display: none !important;
+  }
+
+  /* Utility: hide elements from print (Tailwind-compatible) */
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Utility: show elements only on print */
+  .print\:block {
+    display: block !important;
+  }
+
+  .print\:shadow-none {
+    box-shadow: none !important;
+  }
+
+  .print\:border-0 {
+    border: none !important;
+  }
+
+  .print\:rounded-none {
+    border-radius: 0 !important;
+  }
+
+  /* Table improvements for PDF */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  table th,
+  table td {
+    border: 1px solid #e2e8f0 !important;
+    padding: 6px 10px !important;
+  }
+
+  table thead tr {
+    background: #f8fafc !important;
+  }
+
+  /* Remove interactive styling from price inputs */
+  input[type="number"] {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    -moz-appearance: textfield !important;
+    appearance: textfield !important;
+    padding: 0 !important;
+    font-weight: 700 !important;
+  }
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none !important;
+    margin: 0 !important;
+  }
+
+  /* Ensure semáforo badges print with color */
+  span[class*="bg-emerald"],
+  span[class*="bg-amber"],
+  span[class*="bg-rose"] {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Break page between expanded panels */
+  tr[class*="shadow-inner"] {
+    page-break-inside: avoid !important;
+  }
+
+  /* Remove ONLY decorative blur blobs (absolute positioned background blurs)
+     NOT structural containers that happen to have backdrop-blur */
+  .pointer-events-none[class*="blur-"] {
+    display: none !important;
+  }
+
+  /* Strip backdrop-filter so containers still show but without blur effect */
+  [class*="backdrop-blur"] {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* Print footer — show it (overrides 'hidden' from Tailwind) */
+  .print-footer {
+    display: block !important;
+  }
 }

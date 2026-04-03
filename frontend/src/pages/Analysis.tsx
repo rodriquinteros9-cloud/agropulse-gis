@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import type { AppState } from '../App';
-import { Map, Wind, Droplets, Thermometer, Loader2, Info, Calendar, Activity, TrendingUp, Zap, RefreshCw } from 'lucide-react';
+import { Map, Wind, Droplets, Thermometer, Loader2, Info, Calendar, Activity, TrendingUp, Zap, RefreshCw, Layers } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import PhytosanitaryAdvisor from '../components/PhytosanitaryAdvisor';
 import WeeklyForecast from '../components/WeeklyForecast';
+import SpeiDecisionBoard from '../components/SpeiDecisionBoard';
+import SpeiNdviCorrelationChart from '../components/SpeiNdviCorrelationChart';
+
+
 
 export default function Analysis({ appState, setAppState }: { appState: AppState, setAppState: any }) {
     const features = appState.spatialData?.features || [];
@@ -27,6 +31,17 @@ export default function Analysis({ appState, setAppState }: { appState: AppState
     const [loadingTimeSeries, setLoadingTimeSeries] = useState(false);
     const [timeSeriesError, setTimeSeriesError] = useState("");
     const [fromCache, setFromCache] = useState<boolean | null>(null);
+
+    // Heatmap intralote state
+
+    const [loadingHeatmap, setLoadingHeatmap] = useState(false);
+    const [heatmapError, setHeatmapError] = useState("");
+    const [heatmapData, setHeatmapData] = useState<any>(null);
+
+    // SPEI state
+    const [loadingSpei, setLoadingSpei] = useState(false);
+    const [speiError, setSpeiError] = useState("");
+    const [speiData, setSpeiDataLocal] = useState<any>(null);
 
     const [startDate, setStartDate] = useState<string>(() => {
         const d = new Date();
@@ -68,6 +83,17 @@ export default function Analysis({ appState, setAppState }: { appState: AppState
         }));
     };
 
+    const setSpeiData = (data: any) => {
+        setSpeiDataLocal(data);
+        setAppState((prev: AppState) => ({
+            ...prev,
+            moduleCache: {
+                ...prev.moduleCache,
+                speiData: { ...(prev.moduleCache?.speiData || {}), [activeLotId]: data }
+            }
+        }));
+    };
+
     // ── Sync weather: restore from cache or fetch fresh ──────────────────────
     useEffect(() => {
         if (!activeLotId) return;
@@ -98,6 +124,17 @@ export default function Analysis({ appState, setAppState }: { appState: AppState
             }
         };
         fetchWeather();
+    }, [activeLotId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Sync SPEI cache
+    useEffect(() => {
+        if (!activeLotId) return;
+        const cached = appState.moduleCache?.speiData?.[activeLotId];
+        if (cached) {
+            setSpeiDataLocal(cached);
+        } else {
+            setSpeiDataLocal(null);
+        }
     }, [activeLotId]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // ── Sync timeseries: restore from cache when lot/dates change ─────────────
@@ -182,7 +219,7 @@ export default function Analysis({ appState, setAppState }: { appState: AppState
         <div className="flex flex-col gap-6 h-full overflow-y-auto pb-8">
             <div>
                 <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Análisis Individual</h1>
-                <p className="text-base mt-2 text-slate-500 font-medium">Evolución temporal de vigor y parámetros del lote seleccionado.</p>
+                <p className="text-base mt-2 text-slate-500 font-medium">Información procesada por capas de decisión agronómica.</p>
             </div>
 
             {/* Selector de Lote */}
@@ -209,6 +246,16 @@ export default function Analysis({ appState, setAppState }: { appState: AppState
 
             {selectedLot && (
                 <>
+
+                    {/* ========================================================= */}
+                    {/* 1. OPERACIONES Y CLIMA (CORTO PLAZO)                      */}
+                    {/* ========================================================= */}
+                    <div className="pt-2 border-t border-slate-200/50 mt-2">
+                        <h2 className="text-xl font-extrabold text-slate-800 tracking-tight mb-2 flex items-center gap-2">
+                            <span className="bg-slate-200 text-slate-600 rounded-full w-7 h-7 flex items-center justify-center text-sm">1</span> 
+                            Operaciones y Clima <span className="text-slate-400 font-medium text-base ml-1">(Corto Plazo)</span>
+                        </h2>
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Superficie */}
                         <div className="agro-card p-8 flex flex-col items-center justify-center text-center">
@@ -263,6 +310,125 @@ export default function Analysis({ appState, setAppState }: { appState: AppState
                         <WeeklyForecast forecast={weatherData.forecast} />
                     )}
 
+
+                    {/* ========================================================= */}
+                    {/* 2. ESTADO HÍDRICO Y ESTRÉS (MEDIANO PLAZO)                */}
+                    {/* ========================================================= */}
+                    <div className="pt-8 border-t border-slate-200/50 mt-4">
+                        <h2 className="text-xl font-extrabold text-slate-800 tracking-tight mb-2 flex items-center gap-2">
+                            <span className="bg-slate-200 text-slate-600 rounded-full w-7 h-7 flex items-center justify-center text-sm">2</span> 
+                            Estado Hídrico y Estrés <span className="text-slate-400 font-medium text-base ml-1">(Mediano Plazo)</span>
+                        </h2>
+                    </div>
+                    {/* ══════════ ÍNDICE SPEI (SEQUÍA Y RIEGO) ══════════ */}
+                    <div className="agro-card p-8 flex flex-col mt-6">
+                        <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-5 mb-6">
+                            <div>
+                                <h3 className="text-lg font-extrabold flex items-center gap-2 text-slate-800 tracking-tight">
+                                    <Droplets className="text-blue-500" size={20} />
+                                    Análisis Hídrico y Sequía (SPEI)
+                                </h3>
+                                <p className="text-sm mt-1 font-medium text-slate-500">
+                                    Índice Estandarizado precipitación-evapotranspiración (20+ años base).<br/>
+                                    Precipitación vía NASA IMERG. Temperatura vía NASA POWER.
+                                </p>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-3 bg-slate-50 p-2 rounded-2xl border border-slate-100">
+                                <button
+                                    onClick={async () => {
+                                        if (!selectedLot) return;
+                                        setLoadingSpei(true);
+                                        setSpeiError("");
+                                        setSpeiDataLocal(null);
+                                        try {
+                                            const payload = {
+                                                lote: {
+                                                    id: selectedLot.id,
+                                                    name: selectedLot.name,
+                                                    coordinates: selectedLot.coordinates,
+                                                    area_ha: selectedLot.area_ha,
+                                                    center_lat: selectedLot.center_lat,
+                                                    center_lon: selectedLot.center_lon
+                                                }
+                                            };
+                                            const resp = await fetch('http://127.0.0.1:8000/api/analysis/spei', {
+                                                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify(payload)
+                                            });
+
+                                            if (!resp.ok) {
+                                                const errText = await resp.text();
+                                                let backendMsg = "Error obteniendo histórico para SPEI";
+                                                try {
+                                                    const errJson = JSON.parse(errText);
+                                                    if (errJson.detail) backendMsg = errJson.detail;
+                                                } catch(e) {}
+                                                throw new Error(backendMsg);
+                                            }
+                                            const result = await resp.json();
+                                            if (result.status === 'success') {
+                                                setSpeiData(result.data);
+                                            } else {
+                                                throw new Error("Error calculando SPEI");
+                                            }
+                                        } catch (err: any) {
+                                            setSpeiError(err.message);
+                                        } finally {
+                                            setLoadingSpei(false);
+                                        }
+                                    }}
+                                    disabled={loadingSpei || !selectedLot}
+                                    className="btn-primary text-sm px-5 py-2.5 shadow-blue-500/20 !bg-blue-600 hover:!bg-blue-700 !border-blue-600"
+                                >
+                                    {loadingSpei ? <Loader2 size={16} className="animate-spin" /> : <Droplets size={16} />}
+                                    Analizar SPEI
+                                </button>
+                            </div>
+                        </div>
+
+                        {speiError && (
+                            <div className="text-sm p-4 rounded-xl border mb-4" style={{ background: '#FEF2F2', borderColor: '#FECACA', color: '#991B1B' }}>
+                                ⚠ {speiError}
+                            </div>
+                        )}
+
+                        <div className="w-full flex flex-col justify-center bg-white rounded-2xl p-2 relative">
+                            {loadingSpei ? (
+                                <div className="flex flex-col items-center justify-center text-blue-600 py-16 border border-slate-100 rounded-2xl shadow-inner bg-slate-50">
+                                    <Loader2 size={48} className="animate-spin mb-5" />
+                                    <span className="font-bold text-lg text-slate-800">Analizando 20 años de historia climática...</span>
+                                    <span className="text-sm text-slate-500 mt-2 font-medium">NASA POWER e IMERG están procesando los datos astronómicos.</span>
+                                </div>
+                            ) : speiData ? (
+                                <div className="flex flex-col gap-6 w-full">
+                                    {/* Decision Board */}
+                                    <SpeiDecisionBoard speiCurrent={speiData.current} />
+                                    
+                                    {/* History Chart */}
+                                    {speiData.history_5y && (
+                                        <SpeiNdviCorrelationChart historyData={speiData.history_5y} />
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center text-slate-400 py-16 opacity-60 border border-slate-100 rounded-2xl shadow-inner bg-slate-50">
+                                    <Droplets size={48} className="mb-4" />
+                                    <span className="text-base font-medium">Presioná Analizar SPEI para extraer la historia hídrica del lote</span>
+                                    <span className="text-sm mt-1">Este proceso puede tomar entre 5 y 15 segundos.</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* ========================================================= */}
+                    {/* 3. RESPUESTA VEGETATIVA (ESTADO ACTUAL)                   */}
+                    {/* ========================================================= */}
+                    <div className="pt-8 border-t border-slate-200/50 mt-4">
+                        <h2 className="text-xl font-extrabold text-slate-800 tracking-tight mb-2 flex items-center gap-2">
+                            <span className="bg-slate-200 text-slate-600 rounded-full w-7 h-7 flex items-center justify-center text-sm">3</span> 
+                            Evolución de Cultivo <span className="text-slate-400 font-medium text-base ml-1">(Respuesta Acumulada)</span>
+                        </h2>
+                    </div>
                     {/* Serie Temporal NDVI */}
                     <div className="agro-card p-8 flex flex-col">
                         <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-5 mb-6">
@@ -407,6 +573,164 @@ export default function Analysis({ appState, setAppState }: { appState: AppState
                             </div>
                         )}
                     </div>
+
+                    {/* ========================================================= */}
+                    {/* 4. ESTRUCTURA DE SUELOS (LARGO PLAZO)                     */}
+                    {/* ========================================================= */}
+                    <div className="pt-8 border-t border-slate-200/50 mt-4">
+                        <h2 className="text-xl font-extrabold text-slate-800 tracking-tight mb-2 flex items-center gap-2">
+                            <span className="bg-slate-200 text-slate-600 rounded-full w-7 h-7 flex items-center justify-center text-sm">4</span> 
+                            Estructura de Suelos <span className="text-slate-400 font-medium text-base ml-1">(Largo Plazo)</span>
+                        </h2>
+                    </div>
+                    {/* ══════════ VARIABILIDAD INTRALOTE (HEATMAP) ══════════ */}
+                    <div className="agro-card p-8 flex flex-col">
+                        <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-5 mb-6">
+                            <div>
+                                <h3 className="text-lg font-extrabold flex items-center gap-2 text-slate-800 tracking-tight">
+                                    <Layers className="text-emerald-500" size={20} />
+                                    Zonificación Intralote Simultánea (COS y pH)
+                                </h3>
+                                <p className="text-sm mt-1 font-medium text-slate-500">
+                                    Análisis a 30m de resolución (0–30 cm) vía{' '}
+                                    <a href="https://github.com/openlandmap/soildb" target="_blank" rel="noreferrer" className="text-emerald-600 underline underline-offset-2">OpenLandMap-soildb</a>.
+                                </p>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-3 bg-slate-50 p-2 rounded-2xl border border-slate-100">
+                                <button
+                                    onClick={async () => {
+                                        if (!selectedLot) return;
+                                        setLoadingHeatmap(true);
+                                        setHeatmapError("");
+                                        setHeatmapData(null);
+                                        try {
+                                            const basePayload = {
+                                                lote: {
+                                                    id: selectedLot.id,
+                                                    name: selectedLot.name,
+                                                    coordinates: selectedLot.coordinates,
+                                                    area_ha: selectedLot.area_ha,
+                                                    center_lat: selectedLot.center_lat,
+                                                    center_lon: selectedLot.center_lon
+                                                },
+                                                depth: "0..30cm",
+                                                map_type: "zonification"
+                                            };
+                                            
+                                            // Fetch both variables simultaneously
+                                            const [respSocd, respPh] = await Promise.all([
+                                                fetch('http://127.0.0.1:8000/api/analysis/intralot-heatmap', {
+                                                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({ ...basePayload, variable: 'socd' })
+                                                }),
+                                                fetch('http://127.0.0.1:8000/api/analysis/intralot-heatmap', {
+                                                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({ ...basePayload, variable: 'ph' })
+                                                })
+                                            ]);
+
+                                            if (!respSocd.ok || !respPh.ok) throw new Error(`Ocurrió un error al consultar a Earth Engine`);
+                                            
+                                            const resultSocd = await respSocd.json();
+                                            const resultPh = await respPh.json();
+
+                                            if (resultSocd.status === 'success' && resultPh.status === 'success') {
+                                                setHeatmapData({ socd: resultSocd.heatmap, ph: resultPh.heatmap });
+                                            } else {
+                                                throw new Error('Error al generar los mapas');
+                                            }
+                                        } catch (err: any) {
+                                            setHeatmapError(err.message);
+                                        } finally {
+                                            setLoadingHeatmap(false);
+                                        }
+                                    }}
+                                    disabled={loadingHeatmap || !selectedLot}
+                                    className="btn-primary text-sm px-5 py-2.5 shadow-emerald-500/20"
+                                >
+                                    {loadingHeatmap ? <Loader2 size={16} className="animate-spin" /> : <Layers size={16} />}
+                                    Ejecutar Análisis
+                                </button>
+                            </div>
+                        </div>
+
+                        {heatmapError && (
+                            <div className="text-sm p-4 rounded-xl border mb-4" style={{ background: '#FEF2F2', borderColor: '#FECACA', color: '#991B1B' }}>
+                                ⚠ {heatmapError}
+                            </div>
+                        )}
+
+                        {/* Display Area for Two Maps */}
+                        <div className="w-full flex justify-center bg-white rounded-2xl border border-slate-100 p-5 relative shadow-inner min-h-[400px]">
+                            {loadingHeatmap ? (
+                                <div className="flex flex-col items-center justify-center text-emerald-600 py-16">
+                                    <Loader2 size={48} className="animate-spin mb-5" />
+                                    <span className="font-bold text-lg text-slate-800">Generando zonificación en Earth Engine...</span>
+                                    <span className="text-sm text-slate-500 mt-2 font-medium">Interpolando Carbono y pH simultáneamente.</span>
+                                </div>
+                            ) : heatmapData && heatmapData.socd && heatmapData.ph ? (
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full">
+                                    {/* MAPA SOCD */}
+                                    <div className="flex flex-col gap-4">
+                                        <div className="w-full flex justify-center items-center relative border border-slate-100 rounded-2xl overflow-hidden shadow-sm bg-gradient-to-b from-slate-50 to-white p-4">
+                                            <img
+                                                src={`data:image/png;base64,${heatmapData.socd.image_base64}`}
+                                                alt={`Mapa SOCD`}
+                                                className="w-full h-auto object-contain max-h-[550px]"
+                                            />
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-3">
+                                            <div className="rounded-xl p-4 flex flex-col justify-center border bg-emerald-50 border-emerald-100 shadow-sm">
+                                                <span className="text-[10px] font-bold uppercase tracking-wide mb-1 text-emerald-500 text-center">Media</span>
+                                                <span className="text-xl font-extrabold text-emerald-700 text-center">{heatmapData.socd.stats?.mean ?? '-'}</span>
+                                            </div>
+                                            <div className="rounded-xl p-4 flex flex-col justify-center border bg-slate-50 border-slate-200 shadow-sm">
+                                                <span className="text-[10px] font-bold uppercase tracking-wide mb-1 text-slate-500 text-center">Mín - Máx</span>
+                                                <span className="text-lg font-bold text-slate-700 text-center">{heatmapData.socd.stats?.min ?? '-'} / {heatmapData.socd.stats?.max ?? '-'}</span>
+                                            </div>
+                                            <div className="rounded-xl p-4 flex flex-col justify-center border bg-amber-50 border-amber-100 shadow-sm">
+                                                <span className="text-[10px] font-bold uppercase tracking-wide mb-1 text-amber-500 text-center">CV %</span>
+                                                <span className="text-xl font-bold text-amber-700 text-center">{heatmapData.socd.stats?.cv ?? '-'}%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* MAPA PH */}
+                                    <div className="flex flex-col gap-4">
+                                        <div className="w-full flex justify-center items-center relative border border-slate-100 rounded-2xl overflow-hidden shadow-sm bg-gradient-to-b from-slate-50 to-white p-4">
+                                            <img
+                                                src={`data:image/png;base64,${heatmapData.ph.image_base64}`}
+                                                alt={`Mapa pH`}
+                                                className="w-full h-auto object-contain max-h-[550px]"
+                                            />
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-3">
+                                            <div className="rounded-xl p-4 flex flex-col justify-center border bg-blue-50 border-blue-100 shadow-sm">
+                                                <span className="text-[10px] font-bold uppercase tracking-wide mb-1 text-blue-500 text-center">Media</span>
+                                                <span className="text-xl font-extrabold text-blue-700 text-center">{heatmapData.ph.stats?.mean ?? '-'}</span>
+                                            </div>
+                                            <div className="rounded-xl p-4 flex flex-col justify-center border bg-slate-50 border-slate-200 shadow-sm">
+                                                <span className="text-[10px] font-bold uppercase tracking-wide mb-1 text-slate-500 text-center">Mín - Máx</span>
+                                                <span className="text-lg font-bold text-slate-700 text-center">{heatmapData.ph.stats?.min ?? '-'} / {heatmapData.ph.stats?.max ?? '-'}</span>
+                                            </div>
+                                            <div className="rounded-xl p-4 flex flex-col justify-center border bg-purple-50 border-purple-100 shadow-sm">
+                                                <span className="text-[10px] font-bold uppercase tracking-wide mb-1 text-purple-500 text-center">CV %</span>
+                                                <span className="text-xl font-bold text-purple-700 text-center">{heatmapData.ph.stats?.cv ?? '-'}%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center text-slate-400 py-16 opacity-50">
+                                    <Map size={48} className="mb-4" />
+                                    <span className="text-base font-medium">Hacé clic en Ejecutar Análisis para visualizar las zonas</span>
+                                    <span className="text-sm mt-1">El panel renderizará simultáneamente la zonificación de Carbono Orgánico y pH.</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
                 </>
             )}
         </div>
