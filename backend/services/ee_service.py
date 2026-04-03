@@ -485,7 +485,44 @@ def get_water_availability_sepa(gdf, depth_mm=2000):
         # Asegurar nombres de lote
         if 'Lote_Name' not in gdf_wgs84.columns:
             gdf_wgs84['Lote_Name'] = [f'Lote_{i+1}' for i in range(len(gdf_wgs84))]
+            
+        # 1. Intentar leer data offline (TIF descargado por el usuario)
+        try:
+            import os, glob, rasterio
+            sepa_folder = r"C:\Users\rodri\Downloads\Agua en el suelo SEPA"
+            if os.path.exists(sepa_folder):
+                tiff_files = glob.glob(os.path.join(sepa_folder, "*.tif"))
+                if tiff_files:
+                    latest_tiff = sorted(tiff_files)[-1]
+                    print(f"Utilizando archivo local offline SEPA: {latest_tiff}")
+                    result_dict = {}
+                    with rasterio.open(latest_tiff) as src:
+                        for idx, row in gdf_wgs84.iterrows():
+                            lote_name = str(row.get('Lote_Name', f'Lote_{idx+1}'))
+                            geom = row.geometry
+                            if geom is None or geom.is_empty:
+                                result_dict[lote_name] = 0.0
+                                continue
+                            try:
+                                centroid = geom.representative_point()
+                                r, c = src.index(centroid.x, centroid.y)
+                                val = src.read(1)[r, c]
+                                result_dict[lote_name] = float(val) if float(val) > 0 else 0.0
+                            except Exception as e:
+                                print(f"Error parseando poligono {lote_name} en tiff local: {e}")
+                                result_dict[lote_name] = 0.0
+                    
+                    result_dict['_fuente'] = {
+                        "source": "SEPA INTA (Offline TIF)",
+                        "file": os.path.basename(latest_tiff),
+                        "resolution": "10km",
+                        "url": "https://sepa.inta.gob.ar/productos/geosepa/agua_en_suelo/ad/"
+                    }
+                    return result_dict
+        except Exception as e:
+            print(f"Fallback offline SEPA falló: {e}")
         
+        # 2. Si falla el modo offline, intentar api WMS
         result_dict = {}
         
         # Para cada polígono, obtener el valor de agua disponible de SEPA

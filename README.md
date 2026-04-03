@@ -1,53 +1,50 @@
-# 🌍 AgroPulse - Plataforma GIS Satelital 🚜
+# 🌍 Dashboard de Lotes - Dashboard GIS 🏘️
 
-Una plataforma GIS interactiva de alto rendimiento construida con **React 19, Vite y FastAPI**, diseñada para el monitoreo avanzado de lotes agrícolas utilizando datos satelitales en tiempo real.
+A premium, interactive GIS dashboard built with **React, Vite, and FastAPI**, designed for managing and visualizing lot data with high precision and rich aesthetics.
 
-## ✨ Características Principales
+## ✨ Features
+- 📊 **Interactive GIS Visualization**: Map-centric interface for lot management using Leaflet.
+- 🏢 **Backend Integration**: Robust logic for data processing out of Earth Engine.
+- 🎨 **Modern UI/UX**: Sleek, responsive design with polished components using Tailwind CSS.
+- ⚡ **Real-time Updates**: Fast data processing and seamless dashboard updates.
 
-- 📊 **Análisis Individual por Lote**:
-  - **Vigor Vegetativo**: Curvas temporales de NDVI mediante Google Earth Engine (Sentinel-2 y Landsat).
-  - **Índice SPEI**: Análisis hídrico histórico (20+ años) para detección de sequía y excesos.
-  - **Zonificación Intralote**: Mapas de Carbono Orgánico (COS) y pH a 30m de resolución (OpenLandMap).
-- 🌡️ **Agrometeorología**:
-  - Clima actual y pronóstico de 7 días.
-  - **Asesor Fitosanitario**: Semáforo de aptitud para aplicaciones según delta T, viento y humedad.
-- 📂 **Gestión de Lotes**: Soporte nativo para archivos KML y GeoJSON con procesamiento espacial automático.
-- 🎨 **Interfaz Premium**: Diseño moderno, responsivo y optimizado con Tailwind CSS y Leaflet.
+## 🚀 Getting Started
 
-## 🚀 Inicio Rápido
+Follow these steps to get the dashboard running locally:
 
-### ⚙️ Requisitos Previos
+### ⚙️ Prerequisites
 - Node.js (v18+)
-- Python 3.9+
-- Una cuenta de Google Earth Engine (con proyecto habilitado).
+- Python 3.8+
+- [Pip](https://pip.pypa.io/en/stable/installation/)
 
-### 🛠️ Instalación y Ejecución
+### 🛠️ Installation
 
-1. **Clonar el repositorio:**
+1. **Clone the repository:**
    ```bash
-   git clone https://github.com/rodriquinteros9-cloud/agropulse-gis.git
-   cd agropulse-gis
+   git clone https://github.com/rodriquinteros9-cloud/dashboard-lotes.git
+   cd dashboard-lotes
    ```
 
-2. **Configuración del Backend (FastAPI):**
+2. **Start the Backend (FastAPI):**
    ```bash
    cd backend
-   # Crear archivo .env basado en .env.example y configurar EE_PROJECT
    pip install -r requirements.txt
    uvicorn main:app --reload
    ```
 
-3. **Configuración del Frontend (React):**
+3. **Start the Frontend (React):**
    ```bash
-   cd ../frontend
+   cd frontend
    npm install
    npm run dev
    ```
 
-## 📂 Estructura del Proyecto
+## 📂 Project Structure
+- `backend/`: Data processing and GIS logic using FastAPI.
+- `frontend/`: Custom frontend UI, React components, and 3rd party integrations.
 
-- `backend/`: API construida con FastAPI, integración con Google Earth Engine, procesamiento de datos climáticos y modelos agronómicos.
-- `frontend/`: Aplicación SPA con React, visualización de mapas con Leaflet y gráficos dinámicos con Recharts.
+## 🛡️ License
+Distributed under the MIT License. See `LICENSE` for more information.
 
 ---
-Desarrollado con ❤️ para la precisión y eficiencia en el agro.
+Crafted with ❤️ for precision and efficiency.
