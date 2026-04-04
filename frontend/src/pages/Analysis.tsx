@@ -252,7 +252,7 @@ export default function Analysis({ appState, setAppState }: { appState: AppState
                     {/* ========================================================= */}
                     <div className="pt-2 border-t border-slate-200/50 mt-2">
                         <h2 className="text-xl font-extrabold text-slate-800 tracking-tight mb-2 flex items-center gap-2">
-                            <span className="bg-slate-200 text-slate-600 rounded-full w-7 h-7 flex items-center justify-center text-sm">1</span> 
+                            <span className="bg-slate-200 text-slate-600 rounded-full w-7 h-7 flex items-center justify-center text-sm">1</span>
                             Operaciones y Clima <span className="text-slate-400 font-medium text-base ml-1">(Corto Plazo)</span>
                         </h2>
                     </div>
@@ -316,7 +316,7 @@ export default function Analysis({ appState, setAppState }: { appState: AppState
                     {/* ========================================================= */}
                     <div className="pt-8 border-t border-slate-200/50 mt-4">
                         <h2 className="text-xl font-extrabold text-slate-800 tracking-tight mb-2 flex items-center gap-2">
-                            <span className="bg-slate-200 text-slate-600 rounded-full w-7 h-7 flex items-center justify-center text-sm">2</span> 
+                            <span className="bg-slate-200 text-slate-600 rounded-full w-7 h-7 flex items-center justify-center text-sm">2</span>
                             Estado Hídrico y Estrés <span className="text-slate-400 font-medium text-base ml-1">(Mediano Plazo)</span>
                         </h2>
                     </div>
@@ -329,7 +329,7 @@ export default function Analysis({ appState, setAppState }: { appState: AppState
                                     Análisis Hídrico y Sequía (SPEI)
                                 </h3>
                                 <p className="text-sm mt-1 font-medium text-slate-500">
-                                    Índice Estandarizado precipitación-evapotranspiración (20+ años base).<br/>
+                                    Índice Estandarizado precipitación-evapotranspiración (20+ años base).<br />
                                     Precipitación vía NASA IMERG. Temperatura vía NASA POWER.
                                 </p>
                             </div>
@@ -363,7 +363,7 @@ export default function Analysis({ appState, setAppState }: { appState: AppState
                                                 try {
                                                     const errJson = JSON.parse(errText);
                                                     if (errJson.detail) backendMsg = errJson.detail;
-                                                } catch(e) {}
+                                                } catch (e) { }
                                                 throw new Error(backendMsg);
                                             }
                                             const result = await resp.json();
@@ -404,7 +404,7 @@ export default function Analysis({ appState, setAppState }: { appState: AppState
                                 <div className="flex flex-col gap-6 w-full">
                                     {/* Decision Board */}
                                     <SpeiDecisionBoard speiCurrent={speiData.current} />
-                                    
+
                                     {/* History Chart */}
                                     {speiData.history_5y && (
                                         <SpeiNdviCorrelationChart historyData={speiData.history_5y} />
@@ -425,7 +425,7 @@ export default function Analysis({ appState, setAppState }: { appState: AppState
                     {/* ========================================================= */}
                     <div className="pt-8 border-t border-slate-200/50 mt-4">
                         <h2 className="text-xl font-extrabold text-slate-800 tracking-tight mb-2 flex items-center gap-2">
-                            <span className="bg-slate-200 text-slate-600 rounded-full w-7 h-7 flex items-center justify-center text-sm">3</span> 
+                            <span className="bg-slate-200 text-slate-600 rounded-full w-7 h-7 flex items-center justify-center text-sm">3</span>
                             Evolución de Cultivo <span className="text-slate-400 font-medium text-base ml-1">(Respuesta Acumulada)</span>
                         </h2>
                     </div>
@@ -579,7 +579,7 @@ export default function Analysis({ appState, setAppState }: { appState: AppState
                     {/* ========================================================= */}
                     <div className="pt-8 border-t border-slate-200/50 mt-4">
                         <h2 className="text-xl font-extrabold text-slate-800 tracking-tight mb-2 flex items-center gap-2">
-                            <span className="bg-slate-200 text-slate-600 rounded-full w-7 h-7 flex items-center justify-center text-sm">4</span> 
+                            <span className="bg-slate-200 text-slate-600 rounded-full w-7 h-7 flex items-center justify-center text-sm">4</span>
                             Estructura de Suelos <span className="text-slate-400 font-medium text-base ml-1">(Largo Plazo)</span>
                         </h2>
                     </div>
@@ -617,7 +617,7 @@ export default function Analysis({ appState, setAppState }: { appState: AppState
                                                 depth: "0..30cm",
                                                 map_type: "zonification"
                                             };
-                                            
+
                                             // Fetch both variables simultaneously
                                             const [respSocd, respPh] = await Promise.all([
                                                 fetch('http://127.0.0.1:8000/api/analysis/intralot-heatmap', {
@@ -631,7 +631,7 @@ export default function Analysis({ appState, setAppState }: { appState: AppState
                                             ]);
 
                                             if (!respSocd.ok || !respPh.ok) throw new Error(`Ocurrió un error al consultar a Earth Engine`);
-                                            
+
                                             const resultSocd = await respSocd.json();
                                             const resultPh = await respPh.json();
 
@@ -731,6 +731,9 @@ export default function Analysis({ appState, setAppState }: { appState: AppState
                         </div>
                     </div>
 
+                    {/* ========================================================= */}
+                    {/* 5. IMÁGENES SATELITALES (RESOLUCIÓN INTRALOTE)            */}
+                    {/* END OF ANALYSIS SECTIONS */}
                 </>
             )}
         </div>

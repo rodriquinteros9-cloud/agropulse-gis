@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef, Fragment } from 'react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Legend } from 'recharts';
 import { Calculator, AlertTriangle, RefreshCw, Info, MapPin, Settings2, Edit3, ChevronDown, ChevronUp, Save, Download, FolderOpen, Layers, Trash2, X } from 'lucide-react';
 import { CROP_REFERENCE_DATA, PUERTOS, TARIFA_FLETE_REFERENCIA, FECHA_TARIFA_FLETE } from '../config/cropReferenceData';
 
@@ -364,6 +365,186 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
     }
   };
 
+  // ── Colores de curvas MB (todos los cultivos) ──
+  const MB_COLORS: Record<string, string> = {
+    'Soja': '#16a34a',
+    'Maíz': '#dc2626',
+    'Trigo': '#3b82f6',
+    'Girasol': '#eab308',
+    'Sorgo': '#f97316',
+    'Soja Segunda': '#22c55e',
+    'Cebada': '#8b5cf6',
+    'Maní': '#ec4899',
+  };
+
+  // Filtro de cultivos visibles en el gráfico
+  const [selectedMBCrops, setSelectedMBCrops] = useState<string[]>(['Soja', 'Maíz', 'Girasol']);
+
+  const toggleMBCrop = (cropId: string) => {
+    setSelectedMBCrops(prev =>
+      prev.includes(cropId)
+        ? prev.filter(c => c !== cropId)
+        : [...prev, cropId]
+    );
+  };
+
+  // Estado para el Análisis de Sensibilidad
+  const [sensitivityCropId, setSensitivityCropId] = useState<string>('Soja');
+
+  // ── Datos del gráfico Margen Bruto vs Rendimiento (todos los cultivos) ──
+  const mbChartData = useMemo(() => {
+    // Precio soja referencia para arriendo
+    const precioSojaMatch = prices?.precios?.['soja'] || prices?.precios?.['Soja'];
+    const precioPizarraSojaTn = precioSojaMatch?.precio_usd_tn || CROP_REFERENCE_DATA.find(c => c.id === 'Soja')?.pizarraFallback || 320;
+
+    // Calcular precio neto y costos para TODOS los cultivos
+    const cropCalcs = CROP_REFERENCE_DATA.map(crop => {
+      const priceMatch = prices?.precios?.[crop.id] || prices?.precios?.[crop.name];
+      const basePrecio = priceMatch?.precio_usd_tn || crop.pizarraFallback;
+      const precioPizTn = priceOverrides[crop.id] !== undefined ? priceOverrides[crop.id] : basePrecio;
+
+      const retFrac = crop.retencionPct / 100;
+      const comFrac = crop.comercializacionPct / 100;
+      const precioPostDex = precioPizTn * (1 - retFrac);
+      const gastosComerciales = precioPostDex * comFrac;
+      const precioNetoTn = precioPostDex - fleteUSD - gastosComerciales - crop.secadaUsdTn;
+      const precioNetoQq = precioNetoTn / 10;
+
+      const override = userOverrides[crop.id] || {};
+      const defaultLabores = altoInsumos ? crop.laboresInsumosAlto : crop.laboresInsumosBajo;
+      const defaultCosecha = altoInsumos ? crop.cosechaAlto : crop.cosechaBajo;
+
+      const hasDesglose = ['labranza', 'herbicida', 'fertilizantes', 'insecticidas', 'fungicidas', 'curasemillas', 'semillas'].some(k => override[k as keyof typeof override] !== undefined);
+      let costosLabores = defaultLabores;
+      if (hasDesglose) {
+        costosLabores = (override.labranza || 0) + (override.herbicida || 0) + (override.fertilizantes || 0) + (override.insecticidas || 0) + (override.fungicidas || 0) + (override.curasemillas || 0) + (override.semillas || 0);
+      } else if (override.laboresInsumosDirecto !== undefined) {
+        costosLabores = override.laboresInsumosDirecto;
+      }
+
+      const costosCosecha = override.cosecha !== undefined ? override.cosecha : defaultCosecha;
+      const { qq: arriendoZonalQq } = getArriendoEstimadoQqHa(activeLot.center_lat, activeLot.center_lon);
+      const defaultArriendoQq = conArriendo ? (arriendoZonalQq * crop.arriendoPctAnual) : 0;
+      const arriendoQq = override.arriendo !== undefined ? override.arriendo : defaultArriendoQq;
+      const arriendoAplicaUsd = arriendoQq * (precioPizarraSojaTn / 10);
+
+      const segurosUsd = override.seguros || 0;
+      const estructuraUsd = override.estructura || 0;
+      const impuestosUsd = override.impuestos || 0;
+      const amortizacionesUsd = override.amortizaciones || 0;
+
+      const costosDirectos = costosLabores + costosCosecha + segurosUsd;
+      const costosIndirectos = arriendoAplicaUsd + estructuraUsd + impuestosUsd + amortizacionesUsd;
+      const costosTotalesUsdHa = costosDirectos + costosIndirectos;
+
+      const riQq = precioNetoQq > 0 ? costosTotalesUsdHa / precioNetoQq : 0;
+
+      return { id: crop.id, name: crop.name, precioNetoQq, costosTotalesUsdHa, riQq, rindeMedio: crop.rindeMedioqq };
+    });
+
+    // Rango del eje X: de 0 al mayor rinde medio × 1.6 (solo cultivos visibles)
+    const visibleCalcs = cropCalcs.filter(c => selectedMBCrops.includes(c.id));
+    const maxX = visibleCalcs.length > 0 ? Math.max(...visibleCalcs.map(c => c.rindeMedio * 1.6)) : 50;
+    const steps = Math.ceil(maxX);
+    const data: Record<string, number | string>[] = [];
+
+    for (let rto = 0; rto <= steps; rto += 1) {
+      const point: Record<string, number | string> = { rto };
+      cropCalcs.forEach(cc => {
+        point[cc.id] = Math.round(rto * cc.precioNetoQq - cc.costosTotalesUsdHa);
+      });
+      data.push(point);
+    }
+
+    return { data, cropCalcs };
+  }, [prices, priceOverrides, userOverrides, altoInsumos, conArriendo, fleteUSD, activeLot.center_lat, activeLot.center_lon, selectedMBCrops]);
+
+  // ── Datos del Análisis de Sensibilidad (Precio × Rendimiento) ──
+  const sensitivityData = useMemo(() => {
+    const crop = CROP_REFERENCE_DATA.find(c => c.id === sensitivityCropId);
+    if (!crop) return null;
+
+    // Precio soja referencia para arriendo
+    const precioSojaMatch = prices?.precios?.['soja'] || prices?.precios?.['Soja'];
+    const precioPizarraSojaTn = precioSojaMatch?.precio_usd_tn || CROP_REFERENCE_DATA.find(c => c.id === 'Soja')?.pizarraFallback || 320;
+
+    // Precio pizarra del cultivo seleccionado
+    const priceMatch = prices?.precios?.[crop.id] || prices?.precios?.[crop.name];
+    const basePrecio = priceMatch?.precio_usd_tn || crop.pizarraFallback;
+    const precioPizTn = priceOverrides[crop.id] !== undefined ? priceOverrides[crop.id] : basePrecio;
+
+    // Costos del cultivo (misma fórmula que la tabla RI)
+    const override = userOverrides[crop.id] || {};
+    const defaultLabores = altoInsumos ? crop.laboresInsumosAlto : crop.laboresInsumosBajo;
+    const defaultCosecha = altoInsumos ? crop.cosechaAlto : crop.cosechaBajo;
+
+    const hasDesglose = ['labranza', 'herbicida', 'fertilizantes', 'insecticidas', 'fungicidas', 'curasemillas', 'semillas'].some(k => override[k as keyof typeof override] !== undefined);
+    let costosLabores = defaultLabores;
+    if (hasDesglose) {
+      costosLabores = (override.labranza || 0) + (override.herbicida || 0) + (override.fertilizantes || 0) + (override.insecticidas || 0) + (override.fungicidas || 0) + (override.curasemillas || 0) + (override.semillas || 0);
+    } else if (override.laboresInsumosDirecto !== undefined) {
+      costosLabores = override.laboresInsumosDirecto;
+    }
+
+    const costosCosecha = override.cosecha !== undefined ? override.cosecha : defaultCosecha;
+    const { qq: arriendoZonalQq } = getArriendoEstimadoQqHa(activeLot.center_lat, activeLot.center_lon);
+    const defaultArriendoQq = conArriendo ? (arriendoZonalQq * crop.arriendoPctAnual) : 0;
+    const arriendoQq = override.arriendo !== undefined ? override.arriendo : defaultArriendoQq;
+    const arriendoAplicaUsd = arriendoQq * (precioPizarraSojaTn / 10);
+
+    const segurosUsd = override.seguros || 0;
+    const estructuraUsd = override.estructura || 0;
+    const impuestosUsd = override.impuestos || 0;
+    const amortizacionesUsd = override.amortizaciones || 0;
+
+    const costosDirectos = costosLabores + costosCosecha + segurosUsd;
+    const costosIndirectos = arriendoAplicaUsd + estructuraUsd + impuestosUsd + amortizacionesUsd;
+    const costosTotales = costosDirectos + costosIndirectos;
+
+    // Variaciones de precio pizarra: -30% a +30% en pasos de 10%
+    const priceVariations = [-30, -20, -10, 0, 10, 20, 30];
+    const priceColumns = priceVariations.map(pct => ({
+      pct,
+      pizarra: Math.round(precioPizTn * (1 + pct / 100)),
+    }));
+
+    // Variaciones de rendimiento: 7 filas centradas en el rinde medio
+    const rindeMedio = crop.rindeMedioqq;
+    const step = Math.max(Math.round(rindeMedio * 0.15), 2); // ~15% steps
+    const yieldRows: number[] = [];
+    for (let i = -3; i <= 3; i++) {
+      const rto = Math.max(0, rindeMedio + i * step);
+      yieldRows.push(rto);
+    }
+
+    // Generar la matriz
+    const matrix = yieldRows.map(rto => {
+      const row = priceColumns.map(col => {
+        // Recalcular precio neto con el precio de pizarra variado
+        const retFrac = crop.retencionPct / 100;
+        const comFrac = crop.comercializacionPct / 100;
+        const precioPostDex = col.pizarra * (1 - retFrac);
+        const gastosComerciales = precioPostDex * comFrac;
+        const precioNetoTn = precioPostDex - fleteUSD - gastosComerciales - crop.secadaUsdTn;
+        const precioNetoQq = precioNetoTn / 10;
+
+        const mb = Math.round(rto * precioNetoQq - costosTotales);
+        return mb;
+      });
+      return { rto, values: row };
+    });
+
+    return {
+      cropName: crop.name,
+      cropId: crop.id,
+      precioPizarra: Math.round(precioPizTn),
+      rindeMedio,
+      costosTotales: Math.round(costosTotales),
+      priceColumns,
+      yieldRows,
+      matrix,
+    };
+  }, [sensitivityCropId, prices, priceOverrides, userOverrides, altoInsumos, conArriendo, fleteUSD, activeLot.center_lat, activeLot.center_lon]);
 
   return (
     <div ref={printRef} className="bg-gradient-to-br from-slate-50 to-white border border-slate-200/60 backdrop-blur-sm rounded-[2rem] shadow-xl shadow-slate-200/40 relative overflow-hidden flex flex-col print:shadow-none print:border-0 print:rounded-none">
@@ -514,6 +695,19 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
           )}
         </div>
       )}
+
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {/* SECCIÓN 1: TABLA DE RINDE DE INDIFERENCIA + CONTROLES          */}
+      {/* ════════════════════════════════════════════════════════════════ */}
+      <div className="px-6 md:px-8 pt-5 pb-2 border-t border-slate-100 relative z-10 print:hidden">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-xs font-black shadow-sm">1</div>
+          <div>
+            <h4 className="text-base font-extrabold text-slate-800">Tabla de Rinde de Indiferencia</h4>
+            <p className="text-[11px] text-slate-400 font-medium mt-0.5">Rendimiento mínimo de equilibrio por cultivo. Hacé clic en un cultivo para personalizar sus costos.</p>
+          </div>
+        </div>
+      </div>
 
       <div className="flex flex-col xl:flex-row divide-y xl:divide-y-0 xl:divide-x divide-slate-100 flex-1 relative z-10">
         {/* === PANEL IZQUIERDO: CONTROLES === */}
@@ -973,7 +1167,7 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
             </tbody>
           </table>
 
-          {/* Table Footer */}
+          {/* Table Footer - inline under table */}
           <div className="p-4 bg-slate-50/50 border-t border-slate-100 text-[11px] text-slate-400 font-medium flex flex-wrap gap-x-4 gap-y-1">
             <span><strong>Neto Tranquera:</strong> Pizarra − DEX − Flete − Comerc. − Secada.</span>
             <span><strong>RI:</strong> Costo Total ÷ Precio Neto por Quintal.</span>
@@ -982,24 +1176,302 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
             <span>Semáforo calculado vs. Rinde Medio esperado de la zona.</span>
           </div>
 
-          {/* Print-only Report Footer */}
-          <div className="hidden print:block print-footer p-4 border-t border-slate-200 text-[10px] text-slate-500 font-medium">
-            <div className="flex justify-between items-end">
+        </div>{/* cierre panel derecho */}
+      </div>{/* cierre flex row controles + tabla */}
+
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {/* SECCIÓN 2: GRÁFICO MARGEN BRUTO vs RENDIMIENTO                 */}
+      {/* ════════════════════════════════════════════════════════════════ */}
+      <div className="border-t border-slate-200/60 relative z-10">
+        <div className="p-6 md:p-8">
+          <div className="flex flex-col gap-4 mb-5">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-black shadow-sm">2</div>
               <div>
-                <div className="font-bold text-slate-700 text-xs mb-1">Reporte de Rinde de Indiferencia</div>
-                <div>Lote: <strong className="text-slate-700">{activeLot.name}</strong></div>
-                <div>Puerto: <strong className="text-slate-700">{puertoCoords.nombre}</strong> · Flete: {distanciaKm.toFixed(0)} km · ${fleteUSD.toFixed(2)} USD/tn</div>
-                <div>Configuración: {altoInsumos ? 'Alto' : 'Bajo'} insumos · {conArriendo ? 'Con' : 'Sin'} arriendo</div>
-              </div>
-              <div className="text-right">
-                <div>Generado: {new Date().toLocaleDateString('es-AR')} {new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}</div>
-                <div>Precios: BCR {prices?.fecha || '—'}</div>
-                <div className="mt-1 font-bold text-slate-400">Gravity — Dashboard Agropecuario</div>
+                <h4 className="text-base font-extrabold text-slate-800">Margen Bruto vs Rendimiento</h4>
+                <p className="text-[11px] text-slate-400 font-medium mt-0.5">Curvas de rentabilidad por cultivo. El cruce con la línea $0 marca el <strong>Rinde de Indiferencia</strong>. Seleccioná los cultivos a comparar.</p>
               </div>
             </div>
+
+            {/* Toggle buttons para filtrar cultivos */}
+            <div className="flex flex-wrap gap-2">
+              {mbChartData.cropCalcs.map(cc => {
+                const isActive = selectedMBCrops.includes(cc.id);
+                return (
+                  <button
+                    key={cc.id}
+                    onClick={() => toggleMBCrop(cc.id)}
+                    className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-2 border ${
+                      isActive
+                        ? 'text-white shadow-sm'
+                        : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'
+                    }`}
+                    style={isActive ? { background: MB_COLORS[cc.id] || '#666', borderColor: MB_COLORS[cc.id] || '#666' } : {}}
+                  >
+                    <span className="w-2 h-2 rounded-full" style={{ background: isActive ? '#fff' : (MB_COLORS[cc.id] || '#666') }} />
+                    {cc.name}
+                    <span className={`text-[10px] ${isActive ? 'opacity-80' : 'text-slate-300'}`}>RI: {cc.riQq.toFixed(1)}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl border border-slate-200 p-4 pt-6">
+            <ResponsiveContainer width="100%" height={380}>
+              <LineChart data={mbChartData.data} margin={{ top: 5, right: 30, left: 20, bottom: 25 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis
+                  dataKey="rto"
+                  tick={{ fontSize: 10, fill: '#94a3b8' }}
+                  label={{ value: 'Rendimiento (qq/ha)', position: 'insideBottom', offset: -15, style: { fontSize: 11, fill: '#64748b', fontWeight: 600 } }}
+                />
+                <YAxis
+                  tick={{ fontSize: 10, fill: '#94a3b8' }}
+                  width={65}
+                  tickFormatter={(v: number) => `$${v.toLocaleString()}`}
+                  label={{ value: 'MB (USD/ha)', angle: -90, position: 'insideLeft', offset: 5, style: { fontSize: 11, fill: '#64748b', fontWeight: 600 } }}
+                />
+                <ReferenceLine y={0} stroke="#334155" strokeWidth={1.5} strokeDasharray="6 3" label={{ value: 'Equilibrio ($0)', position: 'insideTopRight', style: { fontSize: 10, fill: '#334155', fontWeight: 700 } }} />
+                <Tooltip
+                  content={({ active, payload, label }: any) => {
+                    if (!active || !payload?.length) return null;
+                    return (
+                      <div className="bg-white/95 backdrop-blur-sm border border-slate-200 rounded-xl px-4 py-3 shadow-xl text-xs">
+                        <div className="font-bold text-slate-700 mb-1.5 pb-1.5 border-b border-slate-100">Rendimiento: {label} qq/ha</div>
+                        {payload.map((p: any) => {
+                          const val = p.value as number;
+                          return (
+                            <div key={p.dataKey} className="flex items-center justify-between gap-4 py-0.5">
+                              <div className="flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-full" style={{ background: p.color }} />
+                                <span className="font-semibold text-slate-600">{p.name}</span>
+                              </div>
+                              <span className={`font-bold tabular-nums ${val >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                {val >= 0 ? '+' : ''}${val.toLocaleString()}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  }}
+                />
+
+                {/* Solo renderizar las líneas de cultivos seleccionados */}
+                {mbChartData.cropCalcs
+                  .filter(cc => selectedMBCrops.includes(cc.id))
+                  .map(cc => (
+                  <Line
+                    key={cc.id}
+                    type="monotone"
+                    dataKey={cc.id}
+                    name={cc.name}
+                    stroke={MB_COLORS[cc.id] || '#666'}
+                    strokeWidth={2.5}
+                    dot={false}
+                    activeDot={{ r: 4, fill: MB_COLORS[cc.id] || '#666', stroke: '#fff', strokeWidth: 2 }}
+                  />
+                ))}
+
+                {/* Líneas verticales punteadas del RI para cultivos seleccionados */}
+                {mbChartData.cropCalcs
+                  .filter(cc => selectedMBCrops.includes(cc.id))
+                  .map(cc => (
+                  <ReferenceLine
+                    key={`ri-${cc.id}`}
+                    x={Math.round(cc.riQq)}
+                    stroke={MB_COLORS[cc.id] || '#666'}
+                    strokeDasharray="4 4"
+                    strokeWidth={1}
+                    strokeOpacity={0.4}
+                  />
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {/* SECCIÓN 3: ANÁLISIS DE SENSIBILIDAD                            */}
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {sensitivityData && (
+      <div className="border-t border-slate-200/60 relative z-10">
+        <div className="p-6 md:p-8">
+          <div className="flex flex-col gap-4 mb-5">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white text-xs font-black shadow-sm">3</div>
+              <div>
+                <h4 className="text-base font-extrabold text-slate-800">Análisis de Sensibilidad</h4>
+                <p className="text-[11px] text-slate-400 font-medium mt-0.5">
+                  Margen Bruto (USD/ha) ante variaciones de <strong>Precio Pizarra</strong> y <strong>Rendimiento</strong>. Seleccioná el cultivo a analizar.
+                </p>
+              </div>
+            </div>
+
+            {/* Toggle buttons para seleccionar cultivo */}
+            <div className="flex flex-wrap gap-2">
+              {CROP_REFERENCE_DATA.map(crop => {
+                const isActive = sensitivityCropId === crop.id;
+                return (
+                  <button
+                    key={crop.id}
+                    onClick={() => setSensitivityCropId(crop.id)}
+                    className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-2 border ${
+                      isActive
+                        ? 'text-white shadow-sm'
+                        : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'
+                    }`}
+                    style={isActive ? { background: MB_COLORS[crop.id] || '#666', borderColor: MB_COLORS[crop.id] || '#666' } : {}}
+                  >
+                    <span className="w-2 h-2 rounded-full" style={{ background: isActive ? '#fff' : (MB_COLORS[crop.id] || '#666') }} />
+                    {crop.name}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Contexto del cultivo seleccionado */}
+            <div className="flex flex-wrap gap-3 text-[10px]">
+              <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 font-bold">
+                Pizarra: ${sensitivityData.precioPizarra}/tn
+              </span>
+              <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 font-bold">
+                Rinde Medio: {sensitivityData.rindeMedio} qq/ha
+              </span>
+              <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 font-bold">
+                Costos: ${sensitivityData.costosTotales}/ha
+              </span>
+            </div>
+          </div>
+
+          {/* Matriz Heatmap */}
+          <div className="overflow-x-auto rounded-xl border border-slate-200">
+            <table className="w-full border-collapse text-xs">
+              <thead>
+                <tr>
+                  <th className="px-3 py-2.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left bg-slate-50 border-b border-r border-slate-200">
+                    Rto \ Precio
+                  </th>
+                  {sensitivityData.priceColumns.map(col => (
+                    <th
+                      key={col.pct}
+                      className={`px-3 py-2.5 text-center border-b border-r border-slate-200 font-bold ${
+                        col.pct === 0
+                          ? 'bg-blue-50 text-blue-700'
+                          : 'bg-slate-50 text-slate-500'
+                      }`}
+                    >
+                      <div className="text-[11px]">${col.pizarra}</div>
+                      <div className={`text-[9px] font-semibold ${col.pct === 0 ? 'text-blue-500' : col.pct > 0 ? 'text-emerald-500' : 'text-rose-400'}`}>
+                        {col.pct === 0 ? 'Actual' : `${col.pct > 0 ? '+' : ''}${col.pct}%`}
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {sensitivityData.matrix.map((row, rowIdx) => {
+                  const isMedian = row.rto === sensitivityData.rindeMedio;
+                  return (
+                    <tr key={rowIdx}>
+                      <td className={`px-3 py-2.5 border-b border-r border-slate-200 font-bold whitespace-nowrap ${
+                        isMedian ? 'bg-blue-50 text-blue-700' : 'bg-slate-50 text-slate-500'
+                      }`}>
+                        <div className="text-[11px]">{row.rto} qq/ha</div>
+                        {isMedian && <div className="text-[9px] text-blue-500 font-semibold">Medio</div>}
+                      </td>
+                      {row.values.map((mb, colIdx) => {
+                        const maxAbs = Math.max(...sensitivityData.matrix.flatMap(r => r.values.map(Math.abs)), 1);
+                        const intensity = Math.min(Math.abs(mb) / maxAbs, 1);
+                        const alpha = 0.08 + intensity * 0.55;
+                        const isCenter = sensitivityData.priceColumns[colIdx].pct === 0 && isMedian;
+
+                        let bgColor: string;
+                        if (mb > 0) {
+                          bgColor = `rgba(22, 163, 74, ${alpha})`;
+                        } else if (mb < 0) {
+                          bgColor = `rgba(220, 38, 38, ${alpha})`;
+                        } else {
+                          bgColor = 'rgba(148, 163, 184, 0.1)';
+                        }
+
+                        return (
+                          <td
+                            key={colIdx}
+                            className={`px-2 py-2.5 text-center border-b border-r border-slate-200 font-bold tabular-nums ${
+                              isCenter ? 'ring-2 ring-blue-400 ring-inset' : ''
+                            }`}
+                            style={{ background: bgColor }}
+                          >
+                            <span className={`text-[11px] ${mb >= 0 ? 'text-emerald-900' : 'text-rose-900'}`}>
+                              {mb >= 0 ? '+' : ''}{mb.toLocaleString()}
+                            </span>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Leyenda */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4 gap-3">
+            <div className="flex items-center gap-4 text-[10px] text-slate-400 font-medium">
+              <div className="flex items-center gap-1.5">
+                <span className="w-4 h-3 rounded" style={{ background: 'rgba(220, 38, 38, 0.4)' }} />
+                <span>Margen Negativo</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-4 h-3 rounded bg-slate-100 border border-slate-200" />
+                <span>Equilibrio</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-4 h-3 rounded" style={{ background: 'rgba(22, 163, 74, 0.4)' }} />
+                <span>Margen Positivo</span>
+              </div>
+            </div>
+            <div className="text-[10px] text-slate-400 font-medium flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded ring-2 ring-blue-400 ring-inset bg-white" />
+              <span>Escenario actual (Precio × Rinde Medio)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {/* FOOTER GENERAL                                                  */}
+      {/* ════════════════════════════════════════════════════════════════ */}
+      <div className="p-5 bg-gradient-to-r from-slate-50 to-slate-100/50 border-t border-slate-200/60 text-[10px] text-slate-400 font-medium">
+        <div className="flex flex-wrap gap-x-6 gap-y-1">
+          <span><strong className="text-slate-500">Fuente de Precios:</strong> BCR Pizarra Rosario · {prices?.fecha || '—'}</span>
+          <span><strong className="text-slate-500">Flete:</strong> {distanciaKm.toFixed(0)} km a {puertoCoords.nombre} · ${fleteUSD.toFixed(2)} USD/tn</span>
+          <span><strong className="text-slate-500">Escenario:</strong> {altoInsumos ? 'Alto' : 'Bajo'} insumos · {conArriendo ? 'Con' : 'Sin'} arriendo</span>
+          <span><strong className="text-slate-500">Lote:</strong> {activeLot.name}</span>
+        </div>
+      </div>
+
+      {/* Print-only Report Footer */}
+      <div className="hidden print:block print-footer p-4 border-t border-slate-200 text-[10px] text-slate-500 font-medium">
+        <div className="flex justify-between items-end">
+          <div>
+            <div className="font-bold text-slate-700 text-xs mb-1">Reporte de Rinde de Indiferencia</div>
+            <div>Lote: <strong className="text-slate-700">{activeLot.name}</strong></div>
+            <div>Puerto: <strong className="text-slate-700">{puertoCoords.nombre}</strong> · Flete: {distanciaKm.toFixed(0)} km · ${fleteUSD.toFixed(2)} USD/tn</div>
+            <div>Configuración: {altoInsumos ? 'Alto' : 'Bajo'} insumos · {conArriendo ? 'Con' : 'Sin'} arriendo</div>
+          </div>
+          <div className="text-right">
+            <div>Generado: {new Date().toLocaleDateString('es-AR')} {new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}</div>
+            <div>Precios: BCR {prices?.fecha || '—'}</div>
+            <div className="mt-1 font-bold text-slate-400">Gravity — Dashboard Agropecuario</div>
           </div>
         </div>
       </div>
     </div>
   );
 }
+

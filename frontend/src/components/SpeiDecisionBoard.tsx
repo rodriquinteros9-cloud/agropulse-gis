@@ -1,108 +1,146 @@
-import React from 'react';
-import { Droplets, Sprout, SunMedium, TrendingUp, Tractor, ShieldAlert, CircleDollarSign, Info } from 'lucide-react';
+import React, { useState } from 'react';
 
 interface SpeiCurrent {
   spei_1: number;
   spei_3: number;
   spei_6: number;
   date: string;
+  percentile_3: number;
+  median_spei_3: number;
+  analogues: number[];
+  total_years: number;
+  history_start: number;
 }
 
 export default function SpeiDecisionBoard({ speiCurrent }: { speiCurrent: SpeiCurrent }) {
+  const [activeScale, setActiveScale] = useState<1 | 3 | 6>(3);
+
   if (!speiCurrent) return null;
 
-  const { spei_1, spei_3, spei_6 } = speiCurrent;
+  const currentVal = speiCurrent[`spei_${activeScale}`];
 
-  // Helpers
-  const getSpeiClass = (val: number) => {
-    if (val <= -2) return "bg-red-50 text-red-700 border-red-200";
-    if (val <= -1) return "bg-orange-50 text-orange-700 border-orange-200";
-    if (val <= -0.5) return "bg-amber-50 text-amber-700 border-amber-200";
-    if (val > 1.5) return "bg-blue-50 text-blue-700 border-blue-200";
-    return "bg-emerald-50 text-emerald-700 border-emerald-200";
+  // Colors & Text based on HTML CSS
+  const getStatus = (v: number) => {
+    if (v <= -1.5) return { text: "Sequía Extrema", color: "#C45A30", textCol: "#712B13", bg: "#FBECE7" };
+    if (v <= -1.0) return { text: "Sequía Severa", color: "#EF9F27", textCol: "#633806", bg: "#FEF3E2" };
+    if (v <= -0.5) return { text: "Sequía Moderada", color: "#FAC775", textCol: "#633806", bg: "#FFF9F0" };
+    if (v <= 0.5) return { text: "Normal", color: "#C0DD97", textCol: "#27500A", bg: "#F4FBF0" };
+    if (v <= 1.5) return { text: "Exceso Leve", color: "#5DCAA5", textCol: "#085041", bg: "#EAF7F3" };
+    return { text: "Exceso Hídrico", color: "#2B8266", textCol: "#04382B", bg: "#E0F2EC" };
   };
 
-  const statusText = (val: number) => {
-    if (val <= -2) return "Sequía Extrema";
-    if (val <= -1) return "Sequía Moderada";
-    if (val <= -0.5) return "Déficit Leve";
-    if (val > 1.5) return "Exceso Hídrico";
-    return "Normal / Óptimo";
-  };
+  const status = getStatus(currentVal);
+  const status3 = getStatus(speiCurrent.spei_3);
 
-  // Decisions
-  // Estrés Vegetativo (Secano)
-  const estresAlert = (spei_1 <= -1 || spei_3 <= -1) 
-    ? { title: "Estrés Vegetativo Alto", bg: "bg-red-500", text: "text-white", icon: SunMedium, msg: "Déficit hídrico detectado. Evaluar impacto en períodos críticos y ajustar fertilización tardía." }
-    : { title: "Reservas Activas Óptimas", bg: "bg-slate-100", text: "text-slate-600", icon: Droplets, msg: "Humedad superficial adecuada para sostener el crecimiento vegetativo actual." };
-
-  // Siembra
-  const siembraAlert = (spei_6 >= -0.5 && spei_3 >= -0.5)
-    ? { title: "Perfil Recargado", bg: "bg-emerald-500", text: "text-white", icon: Sprout, msg: "Condiciones óptimas de humedad profunda para siembra o implantación." }
-    : { title: "Perfil Deficiente", bg: "bg-orange-500", text: "text-white", icon: Sprout, msg: "Poca reserva de agua. Aumenta riesgo en la germinación." };
-
-  // Tránsito / Excesos
-  const pisoAlert = (spei_1 > 1.0)
-    ? { title: "Alerta Excesos / Piso", bg: "bg-blue-500", text: "text-white", icon: Tractor, msg: "Alta retención de humedad. Posible déficit de oxígeno radicular y problemas de piso para maquinaria." }
-    : { title: "Tránsito y Piso Firme", bg: "bg-slate-100", text: "text-slate-600", icon: Tractor, msg: "La macroporosidad permite una recesión normal y suelo firme para ingresos." };
+  const pct = speiCurrent.percentile_3;
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-3 gap-4 mb-4">
-          <div className={`p-4 rounded-xl border shadow-sm flex flex-col items-center justify-center text-center ${getSpeiClass(spei_1)}`}>
-              <span className="text-[10px] font-bold uppercase tracking-wide opacity-80 mb-1">Capa Superficial (1 Mes)</span>
-              <span className="text-lg md:text-xl font-extrabold leading-tight">{statusText(spei_1)}</span>
-              <span className="text-[11px] font-semibold mt-1 opacity-75">Índice Clima: {spei_1.toFixed(2)}</span>
+    <div className="flex flex-col gap-6 font-sans">
+      
+      {/* CAPA 1 */}
+      <div>
+        <div className="text-[11px] font-medium tracking-wider uppercase text-slate-500 mb-3">Capa 1 — Diagnóstico Actual</div>
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 md:p-6 flex items-center gap-5">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-3 flex-wrap">
+              <div 
+                className="flex items-center gap-2 rounded-full px-3 py-1.5" 
+                style={{ backgroundColor: status.bg }}
+              >
+                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: status.color }}></div>
+                <span className="text-[13px] font-semibold" style={{ color: status.textCol }}>{status.text}</span>
+              </div>
+              <div className="flex gap-1.5">
+                {[1, 3, 6].map((sc) => (
+                  <button 
+                    key={sc}
+                    onClick={() => setActiveScale(sc as 1|3|6)}
+                    className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
+                      activeScale === sc 
+                        ? 'bg-slate-100 text-slate-900 border-slate-300 font-bold shadow-sm' 
+                        : 'bg-transparent text-slate-500 border-slate-200 hover:bg-slate-50 font-medium'
+                    }`}
+                  >
+                    SPEI-{sc}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <p className="text-[15px] text-slate-800 leading-relaxed font-medium">
+              El balance hídrico de los últimos <strong>{activeScale} meses</strong> presenta un escenario de <strong style={{color: status.textCol}}>{status.text.toLowerCase()}</strong>. 
+              Estadísticamente se ubica en el <strong>percentil {speiCurrent.percentile_3}</strong> de la serie de datos ({speiCurrent.history_start}–2026), considerando siempre esta misma época del año.
+            </p>
           </div>
-          <div className={`p-4 rounded-xl border shadow-sm flex flex-col items-center justify-center text-center ${getSpeiClass(spei_3)}`}>
-              <span className="text-[10px] font-bold uppercase tracking-wide opacity-80 mb-1">Raíz Activa (3 Meses)</span>
-              <span className="text-lg md:text-xl font-extrabold leading-tight">{statusText(spei_3)}</span>
-              <span className="text-[11px] font-semibold mt-1 opacity-75">Índice Clima: {spei_3.toFixed(2)}</span>
-          </div>
-          <div className={`p-4 rounded-xl border shadow-sm flex flex-col items-center justify-center text-center ${getSpeiClass(spei_6)}`}>
-              <span className="text-[10px] font-bold uppercase tracking-wide opacity-80 mb-1">Recarga Perfil (6 Meses)</span>
-              <span className="text-lg md:text-xl font-extrabold leading-tight">{statusText(spei_6)}</span>
-              <span className="text-[11px] font-semibold mt-1 opacity-75">Índice Clima: {spei_6.toFixed(2)}</span>
-          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className={`p-5 rounded-2xl flex flex-col ${estresAlert.bg} ${estresAlert.text} transition-all`}>
-              <div className="flex items-center gap-2 mb-3">
-                  <estresAlert.icon size={20} />
-                  <h4 className="font-bold text-sm tracking-wide uppercase">{estresAlert.title}</h4>
-              </div>
-              <p className="text-sm font-medium opacity-90">{estresAlert.msg}</p>
+      {/* CAPA 2 */}
+      <div>
+        <div className="text-[11px] font-medium tracking-wider uppercase text-slate-500 mb-3">Capa 2 — Contexto Histórico</div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+          <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">SPEI-3 actual</div>
+            <div className="text-2xl font-extrabold" style={{ color: status3.color === '#C0DD97' ? '#27500A' : status3.color }}>
+               {speiCurrent.spei_3 > 0 ? '+' : ''}{speiCurrent.spei_3.toFixed(2)}
+            </div>
+            <div className="text-xs font-medium text-slate-500 mt-1">{status3.text}</div>
           </div>
-          <div className={`p-5 rounded-2xl flex flex-col ${siembraAlert.bg} ${siembraAlert.text} transition-all`}>
-              <div className="flex items-center gap-2 mb-3">
-                  <siembraAlert.icon size={20} />
-                  <h4 className="font-bold text-sm tracking-wide uppercase">{siembraAlert.title}</h4>
-              </div>
-              <p className="text-sm font-medium opacity-90">{siembraAlert.msg}</p>
+          <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Percentil histórico</div>
+            <div className="text-2xl font-extrabold" style={{ color: status3.color === '#C0DD97' ? '#27500A' : status3.color }}>
+               {speiCurrent.percentile_3}°
+            </div>
+            <div className="text-xs font-medium text-slate-500 mt-1">De {speiCurrent.total_years} años analizados</div>
           </div>
-          <div className={`p-5 rounded-2xl flex flex-col ${pisoAlert.bg} ${pisoAlert.text} transition-all`}>
-              <div className="flex items-center gap-2 mb-3">
-                  <pisoAlert.icon size={20} />
-                  <h4 className="font-bold text-sm tracking-wide uppercase">{pisoAlert.title}</h4>
-              </div>
-              <p className="text-sm font-medium opacity-90">{pisoAlert.msg}</p>
+          <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Años similares</div>
+            <div className="text-2xl font-extrabold text-slate-800">
+               {speiCurrent.analogues.length}
+            </div>
+            <div className="text-xs font-medium text-slate-500 mt-1">{speiCurrent.analogues.join(', ')}</div>
           </div>
+        </div>
+
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 md:p-6 shadow-sm">
+          <div className="text-sm font-bold text-slate-800 mb-1">¿Qué tan extremo es este período comparado con la historia?</div>
+          <div className="text-xs font-medium text-slate-400 mb-5">Posición del año actual sobre la distribución acumulada de los últimos {speiCurrent.total_years} años.</div>
+
+          <div className="relative h-7 rounded overflow-hidden mb-2 flex">
+            <div className="h-full flex items-center justify-center text-[10px] font-bold text-[#712B13] bg-[#C45A30]" style={{ width: '10%' }}>Ext.</div>
+            <div className="h-full flex items-center justify-center text-[10px] font-bold text-[#633806] bg-[#EF9F27]" style={{ width: '15%' }}>Sev.</div>
+            <div className="h-full flex items-center justify-center text-[10px] font-bold text-[#633806] bg-[#FAC775]" style={{ width: '25%' }}>Mod.</div>
+            <div className="h-full flex items-center justify-center text-[10px] font-bold text-[#27500A] bg-[#C0DD97]" style={{ width: '30%' }}>Normal</div>
+            <div className="h-full flex items-center justify-center text-[10px] font-bold text-[#085041] bg-[#5DCAA5]" style={{ width: '20%' }}>Exceso</div>
+            
+            {/* Marker */}
+            <div className="absolute top-0 bottom-0 pointer-events-none transition-all duration-700 ease-in-out" style={{ left: `${pct}%`, transform: 'translateX(-50%)' }}>
+              <div className="absolute -top-[5px] left-1/2 -translate-x-1/2 w-0 h-0 border-l-[7px] border-l-transparent border-r-[7px] border-r-transparent border-t-[9px] border-t-slate-800"></div>
+              <div className="h-full w-[2px] bg-slate-800 mx-auto"></div>
+            </div>
+          </div>
+
+          <div className="flex justify-between text-[11px] font-semibold text-slate-400 mt-1 mb-4">
+            <span>Más seco (p0)</span>
+            <span>p25</span>
+            <span>p50 (Mediana)</span>
+            <span>p75</span>
+            <span>Más húmedo (p100)</span>
+          </div>
+
+          <div className="flex flex-wrap gap-2 mt-5">
+            <span className="text-xs font-semibold px-3 py-1.5 rounded-full border border-[#FAC775] bg-[#FEF3E2] text-[#633806]">
+              {pct} de cada 100 años fueron más secos que este.
+            </span>
+            <span className="text-xs font-semibold px-3 py-1.5 rounded-full border border-slate-200 text-slate-600 bg-slate-50">
+              Análogo histórico: {speiCurrent.analogues[0] || 'N/A'}
+            </span>
+            <span className="text-xs font-semibold px-3 py-1.5 rounded-full border border-slate-200 text-slate-600 bg-slate-50">
+              Centro Histórico: {speiCurrent.median_spei_3 > 0 ? '+' : ''}{speiCurrent.median_spei_3.toFixed(2)}
+            </span>
+          </div>
+        </div>
       </div>
-      
-      {/* Alerta temprana de sequía: SPEI-1 muy por debajo de SPEI-3 (secamiento rápido) */}
-      {spei_1 < spei_3 - 0.5 && spei_1 < 0 && (
-          <div className="mt-2 p-4 bg-orange-50 border border-orange-200 rounded-xl flex items-start gap-3">
-              <SunMedium className="text-orange-500 mt-0.5" size={20} />
-              <div>
-                  <h4 className="font-bold text-sm text-orange-800">Alerta Temprana de Sequía</h4>
-                  <p className="text-sm text-orange-700 font-medium mt-1">
-                      El balance superficial (1 Mes) está cayendo más rápido que las reservas profundas (3 Meses). 
-                      Vas a notar pérdida de turgencia visible en el cultivo en los próximos 10-15 días si no llueve.
-                  </p>
-              </div>
-          </div>
-      )}
     </div>
   );
 }

@@ -250,9 +250,6 @@ def compute_ip_ratios(series: Dict[str, Any]) -> List[Dict[str, Any]]:
     - Soja / DAP
     """
     RATIOS_CONFIG = [
-        {"id": "soja_urea", "grain": "soja", "input": "urea", 
-         "label": "Soja / Urea", "description": "qq de Soja por tn de Urea",
-         "unit": "qq Soja / tn Urea"},
         {"id": "maiz_urea", "grain": "maiz", "input": "urea",
          "label": "Maíz / Urea", "description": "qq de Maíz por tn de Urea",
          "unit": "qq Maíz / tn Urea"},

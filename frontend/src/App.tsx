@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Landing from './pages/Landing';
 import Portal from './pages/Portal';
 import DashboardLayout from './pages/DashboardLayout';
 import Ranking from './pages/Ranking';
@@ -34,7 +35,8 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Portal setAppState={setAppState} />} />
+        <Route path="/" element={<Landing />} />
+        <Route path="/app" element={<Portal setAppState={setAppState} />} />
 
         {/* Protected Dashboard Routes */}
         <Route path="/dashboard" element={<DashboardLayout appState={appState} setAppState={setAppState} />}>

@@ -36,7 +36,6 @@ const LABELS: Record<string, string> = {
 
 // ── Colores de ratio ──
 const RATIO_COLORS: Record<string, string> = {
-  soja_urea: '#6366f1',
   maiz_urea: '#eab308',
   soja_dap: '#ec4899',
 };
@@ -64,7 +63,7 @@ export default function CommodityDashboard() {
   const [fromYear, setFromYear] = useState(2015);
   const [activeTab, setActiveTab] = useState<'prices' | 'ratios'>('ratios');
   const [selectedCommodities, setSelectedCommodities] = useState<string[]>(['soja', 'maiz', 'trigo']);
-  const [selectedRatio, setSelectedRatio] = useState('soja_urea');
+  const [selectedRatio, setSelectedRatio] = useState('maiz_urea');
   const [source, setSource] = useState('');
 
   // ── Fetch data ──
@@ -457,16 +456,38 @@ export default function CommodityDashboard() {
 
             {/* Cards de último precio */}
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
-              {Object.entries(series).map(([key, commodity]) => (
-                <div key={key} className="bg-white rounded-xl border border-slate-200 p-3 flex flex-col">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="w-2.5 h-2.5 rounded-full" style={{ background: COLORS[key] }} />
-                    <span className="text-[10px] font-bold text-slate-500 uppercase">{commodity.label}</span>
+              {Object.entries(series).map(([key, commodity]) => {
+                const count = commodity.data?.length || 1;
+                const meanPrice = commodity.data?.reduce((sum: number, dp: any) => sum + dp.price, 0) / count;
+                const lastPrice = commodity.last_price || 0;
+                const pctVsAvg = meanPrice > 0 ? ((lastPrice - meanPrice) / meanPrice) * 100 : 0;
+                
+                // Lógica de colores dependiendo de si es grano (ingreso) o insumo (costo)
+                const isGrain = ['soja', 'maiz', 'trigo'].includes(key);
+                const isAboveAvg = pctVsAvg > 0;
+                // Si es grano y está arriba del promedio es bueno (verde). Si es insumo y está abajo del promedio es bueno (verde).
+                const isFavorable = isGrain ? isAboveAvg : !isAboveAvg;
+                const colorClass = isFavorable ? 'text-emerald-600 bg-emerald-50 border-emerald-200' : 'text-rose-600 bg-rose-50 border-rose-200';
+
+                return (
+                  <div key={key} className="bg-white rounded-xl border border-slate-200 p-3 flex flex-col">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full" style={{ background: COLORS[key] }} />
+                        <span className="text-[10px] font-bold text-slate-500 uppercase">{commodity.label}</span>
+                      </div>
+                       <span className={`text-[10px] font-bold border ${colorClass} px-1.5 py-0.5 rounded-md`} title={`vs. Promedio Histórico ($${meanPrice.toFixed(0)})`}>
+                        {isAboveAvg ? '↑' : '↓'} {Math.abs(pctVsAvg).toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="text-lg font-black text-slate-800">${lastPrice.toFixed(0)}</div>
+                    <div className="text-[10px] text-slate-400 font-medium">
+                      <span>{commodity.unit} · {commodity.last_date}</span>
+                      <span className="block mt-0.5">Promedio: ${meanPrice.toFixed(0)}</span>
+                    </div>
                   </div>
-                  <div className="text-lg font-black text-slate-800">${commodity.last_price?.toFixed(0)}</div>
-                  <div className="text-[10px] text-slate-400 font-medium">{commodity.unit} · {commodity.last_date}</div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

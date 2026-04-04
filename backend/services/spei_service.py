@@ -215,12 +215,28 @@ def calculate_spei_for_lot(geojson_poly, lat, lon):
         
     results = results.dropna(subset=[f'spei_{max(scales)}'])
     
-    # Extraer el ultimo año de datos para decision board y ultimos 5 años para grafico
-    last_year_data = results.tail(12).copy()
+    # Extraer ultimos datos
     last_5_years = results.tail(12 * 5).copy()
-    
-    # Current values
     current = results.iloc[-1]
+    
+    # Capa 2: Contexto histórico para el mismo mes
+    current_month = current['month']
+    hist_month = results[results['month'] == current_month].dropna(subset=['spei_3']).copy()
+    
+    # Percentil: % de años que fueron MÁS secos (SPEI menor)
+    if len(hist_month) > 0:
+        percentile_3 = stats.percentileofscore(hist_month['spei_3'], current['spei_3'])
+        median_spei_3 = hist_month['spei_3'].median()
+        
+        hist_month['diff'] = abs(hist_month['spei_3'] - current['spei_3'])
+        hist_month_past = hist_month[hist_month['year'] != current['year']]
+        analogues = hist_month_past.sort_values('diff').head(3)['year'].tolist()
+        total_years = len(hist_month)
+    else:
+        percentile_3 = 50
+        median_spei_3 = 0
+        analogues = []
+        total_years = 0
     
     return {
         "current": {
@@ -228,6 +244,11 @@ def calculate_spei_for_lot(geojson_poly, lat, lon):
             "spei_3": round(current['spei_3'], 2),
             "spei_6": round(current['spei_6'], 2),
             "date": current['date'].strftime('%Y-%m'),
+            "percentile_3": round(percentile_3),
+            "median_spei_3": round(median_spei_3, 2),
+            "analogues": [int(y) for y in analogues],
+            "total_years": int(total_years),
+            "history_start": start_year
         },
-        "history_5y": last_5_years.assign(date_str=lambda x: x['date'].dt.strftime('%b %Y')).drop(columns=['date']).to_dict(orient='records')
+        "history_5y": last_5_years.assign(date_str=lambda x: x['date'].dt.strftime('%b %y')).drop(columns=['date']).to_dict(orient='records')
     }
