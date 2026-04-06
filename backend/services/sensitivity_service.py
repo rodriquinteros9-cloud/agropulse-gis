@@ -185,6 +185,19 @@ def generate_price_axis(dist: PriceDistribution, num_cols: int = 7) -> List[Dict
         {"pct_label": "P95", "price": dist.p95, "percentile": 95},
     ]
 
+    # Inyectar el precio actual si no está ya en la lista
+    # con una tolerancia pequeña para evitar duplicados visuales
+    current_exists = any(abs(p["price"] - dist.current_price) < 0.5 for p in percentile_points)
+    if not current_exists:
+        percentile_points.append({
+            "pct_label": "Actual/Pizarra",
+            "price": dist.current_price,
+            "percentile": "Act"
+        })
+
+    # Ordenar los puntos de menor a mayor precio para que el rango sea secuencial en la matriz
+    percentile_points.sort(key=lambda x: x["price"])
+
     return percentile_points
 
 
@@ -319,7 +332,7 @@ async def compute_sensitivity_matrix(
     rinde_base = rinde_esperado or YIELD_RANGES.get(crop_id, {}).get("medio", 35)
     for row in matrix:
         if row["is_expected"]:
-            # Buscar la columna más cercana al precio actual
+            # Buscar la columna exacta o más cercana al precio actual
             min_diff = float('inf')
             for i, val in enumerate(row["values"]):
                 diff = abs(val["precio_pizarra"] - dist.current_price)

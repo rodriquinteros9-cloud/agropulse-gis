@@ -395,6 +395,21 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
   const [sensitivityError, setSensitivityError] = useState('');
   const [sensitivityFromYear, setSensitivityFromYear] = useState(2015);
   const [sensitivityDisplayMode, setSensitivityDisplayMode] = useState<'usd' | 'pct'>('pct');
+  const [sensitivityOverrides, setSensitivityOverrides] = useState<Record<string, {
+    costos_totales?: number | '';
+    rinde_esperado?: number | '';
+    precio_actual?: number | '';
+  }>>({});
+
+  const updateSensitivityOverride = (cropId: string, key: 'costos_totales'|'rinde_esperado'|'precio_actual', value: number | '') => {
+    setSensitivityOverrides(prev => ({
+      ...prev,
+      [cropId]: {
+        ...prev[cropId],
+        [key]: value
+      }
+    }));
+  };
 
   // ── Datos del gráfico Margen Bruto vs Rendimiento (todos los cultivos) ──
   const mbChartData = useMemo(() => {
@@ -499,28 +514,42 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
     const costosIndirectos = arriendoAplicaUsd + estructuraUsd + impuestosUsd + amortizacionesUsd;
     const costosTotales = costosDirectos + costosIndirectos;
 
+    const cropOverrides = sensitivityOverrides[sensitivityCropId] || {};
+    const finalCostos = (cropOverrides.costos_totales !== undefined && cropOverrides.costos_totales !== '') ? Number(cropOverrides.costos_totales) : costosTotales;
+    const finalPrecio = (cropOverrides.precio_actual !== undefined && cropOverrides.precio_actual !== '') ? Number(cropOverrides.precio_actual) : precioPizTn;
+    const finalRinde = (cropOverrides.rinde_esperado !== undefined && cropOverrides.rinde_esperado !== '') ? Number(cropOverrides.rinde_esperado) : crop.rindeMedioqq;
+
     setSensitivityLoading(true);
     setSensitivityError('');
     try {
       const params = new URLSearchParams({
         crop_id: sensitivityCropId,
-        costos_totales: costosTotales.toFixed(2),
+        costos_totales: finalCostos.toFixed(2),
         flete_usd_tn: fleteUSD.toFixed(2),
         from_year: sensitivityFromYear.toString(),
-        current_price: precioPizTn.toFixed(2),
-        rinde_esperado: crop.rindeMedioqq.toString(),
+        current_price: finalPrecio.toFixed(2),
+        rinde_esperado: finalRinde.toString(),
       });
       const resp = await fetch(`${API_BASE}/sensitivity/matrix?${params}`);
       if (!resp.ok) throw new Error('Error de conexión con la API de sensibilidad');
       const data = await resp.json();
       if (data.error) throw new Error(data.error);
-      setSensitivityData(data);
+      
+      // Adjuntar los valores referenciales autocalculados al state para mostrarlos en el UI como reference
+      setSensitivityData({
+        ...data,
+        _auto_referenciales: {
+          costosTotales: costosTotales.toFixed(2),
+          precioPizTn: precioPizTn.toFixed(2),
+          rindeEsperado: crop.rindeMedioqq.toString()
+        }
+      });
     } catch (err: any) {
       setSensitivityError(err.message || 'Error al calcular sensibilidad');
     } finally {
       setSensitivityLoading(false);
     }
-  }, [sensitivityCropId, sensitivityFromYear, prices, priceOverrides, userOverrides, altoInsumos, conArriendo, fleteUSD, activeLot.center_lat, activeLot.center_lon]);
+  }, [sensitivityCropId, sensitivityFromYear, prices, priceOverrides, userOverrides, altoInsumos, conArriendo, fleteUSD, activeLot.center_lat, activeLot.center_lon, sensitivityOverrides]);
 
   // Debounce: solo fetch cuando cambian los parámetros (con delay para no saturar)
   useEffect(() => {
@@ -1362,11 +1391,64 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
               </div>
             )}
 
+            {/* Configuración Rápida de Sensibilidad (Manual Overrides) */}
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
+              <h5 className="text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <Edit3 size={14} className="text-amber-500" />
+                Configuración del Escenario Actual
+              </h5>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                    Costos USD/ha
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder={`Ref: ${sensitivityData?._auto_referenciales?.costosTotales || '...'}`}
+                    value={sensitivityOverrides[sensitivityCropId]?.costos_totales ?? ''}
+                    onChange={(e) => updateSensitivityOverride(sensitivityCropId, 'costos_totales', e.target.value === '' ? '' : Number(e.target.value))}
+                    className="w-full bg-white border border-slate-200 text-xs font-bold text-slate-700 rounded-lg px-2.5 py-2 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 placeholder:text-slate-300 placeholder:font-normal"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                    Precio Pizarra (USD/tn)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder={`Ref: ${sensitivityData?._auto_referenciales?.precioPizTn || '...'}`}
+                    value={sensitivityOverrides[sensitivityCropId]?.precio_actual ?? ''}
+                    onChange={(e) => updateSensitivityOverride(sensitivityCropId, 'precio_actual', e.target.value === '' ? '' : Number(e.target.value))}
+                    className="w-full bg-white border border-slate-200 text-xs font-bold text-slate-700 rounded-lg px-2.5 py-2 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 placeholder:text-slate-300 placeholder:font-normal"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                    Rinde Esperado (qq/ha)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder={`Ref: ${sensitivityData?._auto_referenciales?.rindeEsperado || '...'}`}
+                    value={sensitivityOverrides[sensitivityCropId]?.rinde_esperado ?? ''}
+                    onChange={(e) => updateSensitivityOverride(sensitivityCropId, 'rinde_esperado', e.target.value === '' ? '' : Number(e.target.value))}
+                    className="w-full bg-white border border-slate-200 text-xs font-bold text-slate-700 rounded-lg px-2.5 py-2 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 placeholder:text-slate-300 placeholder:font-normal"
+                  />
+                </div>
+              </div>
+              <p className="text-[10px] text-slate-400 font-medium mt-3 italic mt-2 flex items-center gap-1.5">
+                <Info size={12}/>
+                Deja en blanco para usar la estimación calculada por el simulador principal.
+              </p>
+            </div>
+
             {/* Contexto del cultivo + distribución histórica */}
             {sensitivityData && (
               <div className="flex flex-wrap gap-3 text-[10px]">
                 <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 font-bold">
-                  Costos: ${sensitivityData.costos_totales?.toLocaleString()}/ha
+                  Costos Act: ${sensitivityData.costos_totales?.toLocaleString()}/ha
                 </span>
                 <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 font-bold">
                   Flete: ${sensitivityData.flete_usd_tn?.toFixed(2)}/tn
