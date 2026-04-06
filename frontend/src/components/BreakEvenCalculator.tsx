@@ -388,8 +388,13 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
     );
   };
 
-  // Estado para el Análisis de Sensibilidad
+  // Estado para el Análisis de Sensibilidad Avanzado (Fase 2 — Percentiles Históricos)
   const [sensitivityCropId, setSensitivityCropId] = useState<string>('Soja');
+  const [sensitivityData, setSensitivityData] = useState<any>(null);
+  const [sensitivityLoading, setSensitivityLoading] = useState(false);
+  const [sensitivityError, setSensitivityError] = useState('');
+  const [sensitivityFromYear, setSensitivityFromYear] = useState(2015);
+  const [sensitivityDisplayMode, setSensitivityDisplayMode] = useState<'usd' | 'pct'>('pct');
 
   // ── Datos del gráfico Margen Bruto vs Rendimiento (todos los cultivos) ──
   const mbChartData = useMemo(() => {
@@ -459,25 +464,21 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
     return { data, cropCalcs };
   }, [prices, priceOverrides, userOverrides, altoInsumos, conArriendo, fleteUSD, activeLot.center_lat, activeLot.center_lon, selectedMBCrops]);
 
-  // ── Datos del Análisis de Sensibilidad (Precio × Rendimiento) ──
-  const sensitivityData = useMemo(() => {
+  // ── Fetch del Análisis de Sensibilidad Avanzado (Fase 2 — Backend API) ──
+  const fetchSensitivity = useCallback(async () => {
     const crop = CROP_REFERENCE_DATA.find(c => c.id === sensitivityCropId);
-    if (!crop) return null;
+    if (!crop) return;
 
-    // Precio soja referencia para arriendo
+    // Calcular costos totales del cultivo (misma fórmula que la tabla RI)
     const precioSojaMatch = prices?.precios?.['soja'] || prices?.precios?.['Soja'];
     const precioPizarraSojaTn = precioSojaMatch?.precio_usd_tn || CROP_REFERENCE_DATA.find(c => c.id === 'Soja')?.pizarraFallback || 320;
-
-    // Precio pizarra del cultivo seleccionado
     const priceMatch = prices?.precios?.[crop.id] || prices?.precios?.[crop.name];
     const basePrecio = priceMatch?.precio_usd_tn || crop.pizarraFallback;
     const precioPizTn = priceOverrides[crop.id] !== undefined ? priceOverrides[crop.id] : basePrecio;
 
-    // Costos del cultivo (misma fórmula que la tabla RI)
     const override = userOverrides[crop.id] || {};
     const defaultLabores = altoInsumos ? crop.laboresInsumosAlto : crop.laboresInsumosBajo;
     const defaultCosecha = altoInsumos ? crop.cosechaAlto : crop.cosechaBajo;
-
     const hasDesglose = ['labranza', 'herbicida', 'fertilizantes', 'insecticidas', 'fungicidas', 'curasemillas', 'semillas'].some(k => override[k as keyof typeof override] !== undefined);
     let costosLabores = defaultLabores;
     if (hasDesglose) {
@@ -485,66 +486,49 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
     } else if (override.laboresInsumosDirecto !== undefined) {
       costosLabores = override.laboresInsumosDirecto;
     }
-
     const costosCosecha = override.cosecha !== undefined ? override.cosecha : defaultCosecha;
     const { qq: arriendoZonalQq } = getArriendoEstimadoQqHa(activeLot.center_lat, activeLot.center_lon);
     const defaultArriendoQq = conArriendo ? (arriendoZonalQq * crop.arriendoPctAnual) : 0;
     const arriendoQq = override.arriendo !== undefined ? override.arriendo : defaultArriendoQq;
     const arriendoAplicaUsd = arriendoQq * (precioPizarraSojaTn / 10);
-
     const segurosUsd = override.seguros || 0;
     const estructuraUsd = override.estructura || 0;
     const impuestosUsd = override.impuestos || 0;
     const amortizacionesUsd = override.amortizaciones || 0;
-
     const costosDirectos = costosLabores + costosCosecha + segurosUsd;
     const costosIndirectos = arriendoAplicaUsd + estructuraUsd + impuestosUsd + amortizacionesUsd;
     const costosTotales = costosDirectos + costosIndirectos;
 
-    // Variaciones de precio pizarra: -30% a +30% en pasos de 10%
-    const priceVariations = [-30, -20, -10, 0, 10, 20, 30];
-    const priceColumns = priceVariations.map(pct => ({
-      pct,
-      pizarra: Math.round(precioPizTn * (1 + pct / 100)),
-    }));
-
-    // Variaciones de rendimiento: 7 filas centradas en el rinde medio
-    const rindeMedio = crop.rindeMedioqq;
-    const step = Math.max(Math.round(rindeMedio * 0.15), 2); // ~15% steps
-    const yieldRows: number[] = [];
-    for (let i = -3; i <= 3; i++) {
-      const rto = Math.max(0, rindeMedio + i * step);
-      yieldRows.push(rto);
-    }
-
-    // Generar la matriz
-    const matrix = yieldRows.map(rto => {
-      const row = priceColumns.map(col => {
-        // Recalcular precio neto con el precio de pizarra variado
-        const retFrac = crop.retencionPct / 100;
-        const comFrac = crop.comercializacionPct / 100;
-        const precioPostDex = col.pizarra * (1 - retFrac);
-        const gastosComerciales = precioPostDex * comFrac;
-        const precioNetoTn = precioPostDex - fleteUSD - gastosComerciales - crop.secadaUsdTn;
-        const precioNetoQq = precioNetoTn / 10;
-
-        const mb = Math.round(rto * precioNetoQq - costosTotales);
-        return mb;
+    setSensitivityLoading(true);
+    setSensitivityError('');
+    try {
+      const params = new URLSearchParams({
+        crop_id: sensitivityCropId,
+        costos_totales: costosTotales.toFixed(2),
+        flete_usd_tn: fleteUSD.toFixed(2),
+        from_year: sensitivityFromYear.toString(),
+        current_price: precioPizTn.toFixed(2),
+        rinde_esperado: crop.rindeMedioqq.toString(),
       });
-      return { rto, values: row };
-    });
+      const resp = await fetch(`${API_BASE}/sensitivity/matrix?${params}`);
+      if (!resp.ok) throw new Error('Error de conexión con la API de sensibilidad');
+      const data = await resp.json();
+      if (data.error) throw new Error(data.error);
+      setSensitivityData(data);
+    } catch (err: any) {
+      setSensitivityError(err.message || 'Error al calcular sensibilidad');
+    } finally {
+      setSensitivityLoading(false);
+    }
+  }, [sensitivityCropId, sensitivityFromYear, prices, priceOverrides, userOverrides, altoInsumos, conArriendo, fleteUSD, activeLot.center_lat, activeLot.center_lon]);
 
-    return {
-      cropName: crop.name,
-      cropId: crop.id,
-      precioPizarra: Math.round(precioPizTn),
-      rindeMedio,
-      costosTotales: Math.round(costosTotales),
-      priceColumns,
-      yieldRows,
-      matrix,
-    };
-  }, [sensitivityCropId, prices, priceOverrides, userOverrides, altoInsumos, conArriendo, fleteUSD, activeLot.center_lat, activeLot.center_lon]);
+  // Debounce: solo fetch cuando cambian los parámetros (con delay para no saturar)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (prices) fetchSensitivity();
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [fetchSensitivity, prices]);
 
   return (
     <div ref={printRef} className="bg-gradient-to-br from-slate-50 to-white border border-slate-200/60 backdrop-blur-sm rounded-[2rem] shadow-xl shadow-slate-200/40 relative overflow-hidden flex flex-col print:shadow-none print:border-0 print:rounded-none">
@@ -1294,19 +1278,58 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
       </div>
 
       {/* ════════════════════════════════════════════════════════════════ */}
-      {/* SECCIÓN 3: ANÁLISIS DE SENSIBILIDAD                            */}
+      {/* SECCIÓN 3: ANÁLISIS DE SENSIBILIDAD AVANZADO (Fase 2)          */}
       {/* ════════════════════════════════════════════════════════════════ */}
-      {sensitivityData && (
       <div className="border-t border-slate-200/60 relative z-10">
         <div className="p-6 md:p-8">
           <div className="flex flex-col gap-4 mb-5">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white text-xs font-black shadow-sm">3</div>
-              <div>
-                <h4 className="text-base font-extrabold text-slate-800">Análisis de Sensibilidad</h4>
-                <p className="text-[11px] text-slate-400 font-medium mt-0.5">
-                  Margen Bruto (USD/ha) ante variaciones de <strong>Precio Pizarra</strong> y <strong>Rendimiento</strong>. Seleccioná el cultivo a analizar.
-                </p>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white text-xs font-black shadow-sm">3</div>
+                <div>
+                  <h4 className="text-base font-extrabold text-slate-800">Análisis de Sensibilidad</h4>
+                  <p className="text-[11px] text-slate-400 font-medium mt-0.5">
+                    Matriz de <strong>Precio Pizarra (Percentiles Históricos P5–P95)</strong> × <strong>Rendimiento</strong>. Fuente: World Bank Pink Sheet.
+                  </p>
+                </div>
+              </div>
+
+              {/* Controles: Año base + Modo de visualización */}
+              <div className="flex items-center gap-3 flex-wrap">
+                {/* Selector de año base */}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">Desde:</span>
+                  <select
+                    value={sensitivityFromYear}
+                    onChange={(e) => setSensitivityFromYear(parseInt(e.target.value))}
+                    className="bg-white border border-slate-200 text-[11px] font-bold text-slate-700 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500 shadow-sm"
+                  >
+                    {[2000, 2005, 2010, 2015, 2018, 2020].map(y => (
+                      <option key={y} value={y}>{y}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Toggle USD / % */}
+                <div className="flex bg-slate-100 p-0.5 rounded-lg">
+                  <button
+                    onClick={() => setSensitivityDisplayMode('pct')}
+                    className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${sensitivityDisplayMode === 'pct' ? 'bg-white text-amber-700 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                  >
+                    % s/ Costos
+                  </button>
+                  <button
+                    onClick={() => setSensitivityDisplayMode('usd')}
+                    className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${sensitivityDisplayMode === 'usd' ? 'bg-white text-amber-700 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                  >
+                    USD/ha
+                  </button>
+                </div>
+
+                {/* Indicador de carga */}
+                {sensitivityLoading && (
+                  <RefreshCw size={14} className="animate-spin text-amber-500" />
+                )}
               </div>
             </div>
 
@@ -1332,116 +1355,172 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
               })}
             </div>
 
-            {/* Contexto del cultivo seleccionado */}
-            <div className="flex flex-wrap gap-3 text-[10px]">
-              <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 font-bold">
-                Pizarra: ${sensitivityData.precioPizarra}/tn
-              </span>
-              <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 font-bold">
-                Rinde Medio: {sensitivityData.rindeMedio} qq/ha
-              </span>
-              <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 font-bold">
-                Costos: ${sensitivityData.costosTotales}/ha
-              </span>
-            </div>
+            {/* Error de sensibilidad */}
+            {sensitivityError && (
+              <div className="px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-2 text-sm font-medium text-amber-700">
+                <AlertTriangle size={16} /> {sensitivityError}
+              </div>
+            )}
+
+            {/* Contexto del cultivo + distribución histórica */}
+            {sensitivityData && (
+              <div className="flex flex-wrap gap-3 text-[10px]">
+                <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 font-bold">
+                  Costos: ${sensitivityData.costos_totales?.toLocaleString()}/ha
+                </span>
+                <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 font-bold">
+                  Flete: ${sensitivityData.flete_usd_tn?.toFixed(2)}/tn
+                </span>
+                {sensitivityData.price_distribution && (
+                  <>
+                    <span className="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 font-bold border border-amber-200">
+                      P5: ${sensitivityData.price_distribution.p5}/tn
+                    </span>
+                    <span className="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 font-bold border border-blue-200">
+                      Mediana (P50): ${sensitivityData.price_distribution.p50}/tn
+                    </span>
+                    <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">
+                      P95: ${sensitivityData.price_distribution.p95}/tn
+                    </span>
+                    <span className="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 font-bold border border-indigo-200">
+                      Actual: ${sensitivityData.price_distribution.current}/tn
+                    </span>
+                    <span className="px-2.5 py-1 rounded-lg bg-slate-50 text-slate-500 font-semibold">
+                      {sensitivityData.price_distribution.count} meses · {sensitivityData.price_distribution.from_date} → {sensitivityData.price_distribution.to_date}
+                    </span>
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* Matriz Heatmap */}
-          <div className="overflow-x-auto rounded-xl border border-slate-200">
-            <table className="w-full border-collapse text-xs">
-              <thead>
-                <tr>
-                  <th className="px-3 py-2.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left bg-slate-50 border-b border-r border-slate-200">
-                    Rto \ Precio
-                  </th>
-                  {sensitivityData.priceColumns.map(col => (
-                    <th
-                      key={col.pct}
-                      className={`px-3 py-2.5 text-center border-b border-r border-slate-200 font-bold ${
-                        col.pct === 0
-                          ? 'bg-blue-50 text-blue-700'
-                          : 'bg-slate-50 text-slate-500'
-                      }`}
-                    >
-                      <div className="text-[11px]">${col.pizarra}</div>
-                      <div className={`text-[9px] font-semibold ${col.pct === 0 ? 'text-blue-500' : col.pct > 0 ? 'text-emerald-500' : 'text-rose-400'}`}>
-                        {col.pct === 0 ? 'Actual' : `${col.pct > 0 ? '+' : ''}${col.pct}%`}
-                      </div>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {sensitivityData.matrix.map((row, rowIdx) => {
-                  const isMedian = row.rto === sensitivityData.rindeMedio;
-                  return (
-                    <tr key={rowIdx}>
-                      <td className={`px-3 py-2.5 border-b border-r border-slate-200 font-bold whitespace-nowrap ${
-                        isMedian ? 'bg-blue-50 text-blue-700' : 'bg-slate-50 text-slate-500'
-                      }`}>
-                        <div className="text-[11px]">{row.rto} qq/ha</div>
-                        {isMedian && <div className="text-[9px] text-blue-500 font-semibold">Medio</div>}
-                      </td>
-                      {row.values.map((mb, colIdx) => {
-                        const maxAbs = Math.max(...sensitivityData.matrix.flatMap(r => r.values.map(Math.abs)), 1);
-                        const intensity = Math.min(Math.abs(mb) / maxAbs, 1);
-                        const alpha = 0.08 + intensity * 0.55;
-                        const isCenter = sensitivityData.priceColumns[colIdx].pct === 0 && isMedian;
+          {/* Loading state */}
+          {sensitivityLoading && !sensitivityData && (
+            <div className="flex items-center justify-center h-[200px]">
+              <div className="flex flex-col items-center gap-3">
+                <RefreshCw size={28} className="animate-spin text-amber-400" />
+                <span className="text-sm font-semibold text-slate-400">Calculando matriz de sensibilidad…</span>
+              </div>
+            </div>
+          )}
 
-                        let bgColor: string;
-                        if (mb > 0) {
-                          bgColor = `rgba(22, 163, 74, ${alpha})`;
-                        } else if (mb < 0) {
-                          bgColor = `rgba(220, 38, 38, ${alpha})`;
-                        } else {
-                          bgColor = 'rgba(148, 163, 184, 0.1)';
-                        }
-
+          {/* Matriz Heatmap Avanzada */}
+          {sensitivityData && sensitivityData.matrix && (
+            <>
+              <div className="overflow-x-auto rounded-xl border border-slate-200">
+                <table className="w-full border-collapse text-xs">
+                  <thead>
+                    <tr>
+                      <th className="px-3 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left bg-slate-50 border-b border-r border-slate-200 sticky left-0 z-10">
+                        <div>Rto (qq/ha)</div>
+                        <div className="text-[8px] text-slate-400 font-semibold normal-case tracking-normal">↓ Precio →</div>
+                      </th>
+                      {sensitivityData.price_axis?.map((col: any, i: number) => {
+                        const isCurrent = sensitivityData.current_cell?.col_idx === i;
                         return (
-                          <td
-                            key={colIdx}
-                            className={`px-2 py-2.5 text-center border-b border-r border-slate-200 font-bold tabular-nums ${
-                              isCenter ? 'ring-2 ring-blue-400 ring-inset' : ''
+                          <th
+                            key={i}
+                            className={`px-2 py-3 text-center border-b border-r border-slate-200 font-bold min-w-[68px] ${
+                              isCurrent
+                                ? 'bg-indigo-50 text-indigo-700'
+                                : 'bg-slate-50 text-slate-600'
                             }`}
-                            style={{ background: bgColor }}
                           >
-                            <span className={`text-[11px] ${mb >= 0 ? 'text-emerald-900' : 'text-rose-900'}`}>
-                              {mb >= 0 ? '+' : ''}{mb.toLocaleString()}
-                            </span>
-                          </td>
+                            <div className="text-[11px]">${Math.round(col.price)}</div>
+                            <div className={`text-[8px] font-bold tracking-wider ${isCurrent ? 'text-indigo-500' : 'text-slate-400'}`}>
+                              {col.pct_label}
+                            </div>
+                          </th>
                         );
                       })}
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody>
+                    {sensitivityData.matrix.map((row: any, rowIdx: number) => {
+                      const isExpected = row.is_expected;
+                      return (
+                        <tr key={rowIdx} className={isExpected ? 'relative' : ''}>
+                          <td className={`px-3 py-2 border-b border-r border-slate-200 font-bold whitespace-nowrap sticky left-0 z-10 ${
+                            isExpected ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-50 text-slate-500'
+                          }`}>
+                            <div className="text-[11px]">{row.rto}</div>
+                            {isExpected && <div className="text-[8px] text-indigo-500 font-bold">Esperado</div>}
+                          </td>
+                          {row.values.map((cell: any, colIdx: number) => {
+                            const val = sensitivityDisplayMode === 'pct' ? cell.mb_pct : cell.mb_usd;
+                            const allVals = sensitivityData.matrix.flatMap((r: any) =>
+                              r.values.map((c: any) => sensitivityDisplayMode === 'pct' ? Math.abs(c.mb_pct) : Math.abs(c.mb_usd))
+                            );
+                            const maxAbs = Math.max(...allVals, 1);
+                            const intensity = Math.min(Math.abs(val) / maxAbs, 1);
+                            const alpha = 0.06 + intensity * 0.52;
+                            const isCurrentCell = sensitivityData.current_cell?.row_idx === rowIdx && sensitivityData.current_cell?.col_idx === colIdx;
 
-          {/* Leyenda */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4 gap-3">
-            <div className="flex items-center gap-4 text-[10px] text-slate-400 font-medium">
-              <div className="flex items-center gap-1.5">
-                <span className="w-4 h-3 rounded" style={{ background: 'rgba(220, 38, 38, 0.4)' }} />
-                <span>Margen Negativo</span>
+                            let bgColor: string;
+                            if (val > 0) {
+                              bgColor = `rgba(22, 163, 74, ${alpha})`;
+                            } else if (val < 0) {
+                              bgColor = `rgba(220, 38, 38, ${alpha})`;
+                            } else {
+                              bgColor = 'rgba(148, 163, 184, 0.08)';
+                            }
+
+                            return (
+                              <td
+                                key={colIdx}
+                                className={`px-1.5 py-2 text-center border-b border-r border-slate-200 font-bold tabular-nums transition-colors ${
+                                  isCurrentCell ? 'ring-2 ring-indigo-500 ring-inset' : ''
+                                }`}
+                                style={{ background: bgColor }}
+                                title={`MB: $${cell.mb_usd} USD/ha | ${cell.mb_pct}% s/costos | Pizarra: $${cell.precio_pizarra}/tn | Neto: $${cell.precio_neto_qq}/qq`}
+                              >
+                                <span className={`text-[10px] ${val >= 0 ? 'text-emerald-900' : 'text-rose-900'}`}>
+                                  {sensitivityDisplayMode === 'pct'
+                                    ? `${val >= 0 ? '+' : ''}${val.toFixed(0)}%`
+                                    : `${val >= 0 ? '+' : ''}${val.toLocaleString()}`
+                                  }
+                                </span>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-4 h-3 rounded bg-slate-100 border border-slate-200" />
-                <span>Equilibrio</span>
+
+              {/* Leyenda + Fuente */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4 gap-3">
+                <div className="flex items-center gap-4 text-[10px] text-slate-400 font-medium">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-4 h-3 rounded" style={{ background: 'rgba(220, 38, 38, 0.4)' }} />
+                    <span>Margen Negativo</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-4 h-3 rounded bg-slate-100 border border-slate-200" />
+                    <span>Equilibrio</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-4 h-3 rounded" style={{ background: 'rgba(22, 163, 74, 0.4)' }} />
+                    <span>Margen Positivo</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded ring-2 ring-indigo-500 ring-inset bg-white" />
+                    <span>Escenario actual</span>
+                  </div>
+                </div>
+                <div className="text-[10px] text-slate-400 font-medium flex items-center gap-1.5">
+                  <Info size={12} className="text-slate-400" />
+                  <span>
+                    Fuente: {sensitivityData.price_distribution?.source || 'World Bank Pink Sheet'} · {sensitivityData.price_distribution?.is_historical ? 'Precios históricos reales' : 'Variación sintética'}
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-4 h-3 rounded" style={{ background: 'rgba(22, 163, 74, 0.4)' }} />
-                <span>Margen Positivo</span>
-              </div>
-            </div>
-            <div className="text-[10px] text-slate-400 font-medium flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded ring-2 ring-blue-400 ring-inset bg-white" />
-              <span>Escenario actual (Precio × Rinde Medio)</span>
-            </div>
-          </div>
+            </>
+          )}
         </div>
       </div>
-      )}
 
       {/* ════════════════════════════════════════════════════════════════ */}
       {/* FOOTER GENERAL                                                  */}

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 import os
 from fastapi.middleware.cors import CORSMiddleware
-from routers import analysis_router, upload_router, prices_router, enso_router, commodity_router, satellite
+from routers import analysis_router, upload_router, prices_router, enso_router, commodity_router, satellite, sensitivity_router
 
 app = FastAPI(
     title="AgroPulse Backend API",
@@ -29,6 +29,7 @@ app.include_router(prices_router.router, prefix="/api")
 app.include_router(enso_router.router, prefix="/api")
 app.include_router(commodity_router.router, prefix="/api")
 app.include_router(satellite.router, prefix="/api")
+app.include_router(sensitivity_router.router, prefix="/api")
 
 
 @app.get("/api/health")
