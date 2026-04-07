@@ -168,37 +168,24 @@ async def compute_price_distribution(
     )
 
 
-def generate_price_axis(dist: PriceDistribution, num_cols: int = 7) -> List[Dict[str, Any]]:
+def generate_price_axis(dist: PriceDistribution, num_cols: int = 9) -> List[Dict[str, Any]]:
     """
-    Genera el eje de precios usando percentiles históricos.
-    Retorna num_cols puntos distribuidos entre P5 y P95, siempre incluyendo
-    el precio actual (o mediana) como referencia central.
+    Genera el eje de precios usando variaciones porcentuales sintéticas
+    alrededor del precio actual de pizarra (+/- 20%).
     """
-    # Puntos de percentil fijos: P5, P10, P25, P50 (mediana), P75, P90, P95
-    percentile_points = [
-        {"pct_label": "P5",  "price": dist.p5,  "percentile": 5},
-        {"pct_label": "P10", "price": dist.p10, "percentile": 10},
-        {"pct_label": "P25", "price": dist.p25, "percentile": 25},
-        {"pct_label": "P50", "price": dist.p50, "percentile": 50},
-        {"pct_label": "P75", "price": dist.p75, "percentile": 75},
-        {"pct_label": "P90", "price": dist.p90, "percentile": 90},
-        {"pct_label": "P95", "price": dist.p95, "percentile": 95},
-    ]
-
-    # Inyectar el precio actual si no está ya en la lista
-    # con una tolerancia pequeña para evitar duplicados visuales
-    current_exists = any(abs(p["price"] - dist.current_price) < 0.5 for p in percentile_points)
-    if not current_exists:
-        percentile_points.append({
-            "pct_label": "Actual/Pizarra",
-            "price": dist.current_price,
-            "percentile": "Act"
+    increments = [-20, -15, -10, -5, 0, 5, 10, 15, 20]
+    points = []
+    
+    for pct in increments:
+        price = dist.current_price * (1 + pct / 100.0)
+        label = "Actual/Pizarra" if pct == 0 else f"{pct:+} %"
+        points.append({
+            "pct_label": label,
+            "price": round(price, 2),
+            "percentile": "Act" if pct == 0 else str(pct)
         })
-
-    # Ordenar los puntos de menor a mayor precio para que el rango sea secuencial en la matriz
-    percentile_points.sort(key=lambda x: x["price"])
-
-    return percentile_points
+        
+    return points
 
 
 def generate_yield_axis(crop_id: str, rinde_esperado: Optional[float] = None) -> List[Dict[str, Any]]:

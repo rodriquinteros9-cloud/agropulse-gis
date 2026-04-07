@@ -5,8 +5,10 @@ Obtiene precios de pizarra usando Playwright para renderizar JS.
 import re
 import time
 import logging
+import asyncio
 from typing import Dict, Any
-from playwright.async_api import async_playwright
+import urllib.request
+from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
 
@@ -40,36 +42,35 @@ FALLBACK_PRICES = {
     "Maní": {"precio_usd_tn": 650.00, "fuente": "Referencia (Fallback)"},
 }
 
-BCR_URL = "https://www.cac.bcr.com.ar/es/precios-de-pizarra"
+BCR_URL = "https://www.bcr.com.ar/es"
 
-# Nombres de cultivos normalizados vs términos de bùsqueda probables en la BCR
-GRAIN_MAP = {
-    "Soja": ["soja"],
-    "Maíz": ["maíz", "maiz"],
-    "Trigo": ["trigo"],
-    "Girasol": ["girasol"],
-    "Sorgo": ["sorgo"],
+GRAIN_HTML_MAP = {
+    "Soja": "soja",
+    "Maíz": "maiz",
+    "Trigo": "trigo",
+    "Girasol": "girasol"
 }
 
-def parse_price_line(line: str) -> float | None:
-    # Busca un patron de numero con o sin decimales: 320,5 o 320,50 o 300000
-    match = re.search(r'([\d]{2,}(?:\.\d{3})*(?:,\d+)?)', line.replace('$', '').replace('U$S', '').strip())
-    if not match:
-        return None
-        
-    num_str = match.group(1).replace('.', '').replace(',', '.')
-    try:
-        val = float(num_str)
-        return val
-    except ValueError:
-        return None
-
+def sync_scrape() -> Dict[str, float]:
+    req = urllib.request.Request(BCR_URL, headers={'User-Agent': 'Mozilla/5.0'})
+    html = urllib.request.urlopen(req, timeout=15).read().decode('utf-8')
+    soup = BeautifulSoup(html, 'html.parser')
+    
+    extracted = {}
+    for cropKey, id_suffix in GRAIN_HTML_MAP.items():
+        container = soup.find(id=f'data-cotizador-{id_suffix}')
+        if container:
+            text = container.get_text(separator=' ').replace('\\n', ' ')
+            # Buscar ej: US$ 318,0 o U$S 185,0
+            match = re.search(r'(?:US\$|U\$S)\s*(\d+[,.]\d+)', text)
+            if match:
+                val = float(match.group(1).replace(',', '.'))
+                extracted[cropKey] = val
+    return extracted
 
 async def scrape_bccba_prices() -> Dict[str, Any]:
     """
-    Scrapea precios de BCR Rosario vía Playwright.
-    Retorna los precios usando la estructura que esperaba el Frontend, 
-    o el fallback de Opción B si falla.
+    Scrapea precios del dashboard de BCR (bcr.com.ar/es).
     """
     global _price_cache, _cache_timestamp
 
@@ -81,43 +82,11 @@ async def scrape_bccba_prices() -> Dict[str, Any]:
     fecha_pizarra = time.strftime("%d/%m/%Y")
 
     try:
-        async with async_playwright() as p:
-            # Lanzamos chromium headless
-            browser = await p.chromium.launch(headless=True)
-            page = await browser.new_page()
-            
-            # Navegar a la página y esperar que la red se estabilice para cargar los valores React/Angular/Vue
-            await page.goto(BCR_URL, wait_until="networkidle", timeout=20000)
-            
-            text_content = await page.evaluate("document.body.innerText")
-            lines = [l.strip().lower() for l in text_content.split('\n') if l.strip()]
-            
-            # Buscar coincidencia simple de filas
-            for i, line in enumerate(lines):
-                # Extraer precios si encontramos la palabra clave
-                for crop_standard, keywords in GRAIN_MAP.items():
-                    if any(line.startswith(kw) for kw in keywords) and crop_standard not in precios_extraidos:
-                        # Si la línea misma tiene el numero: "soja 320,0" (USD es típicamente < 1000, o ARS > 1000)
-                        val = parse_price_line(line)
-                        if val is None and i + 1 < len(lines):
-                            # A veces el precio esta en la siguiente celda
-                            val = parse_price_line(lines[i+1])
-                            
-                        if val:
-                            if val > 1000:
-                                # Es probable ARS, el componente se va a encargar o podemos dividir por TC
-                                # Pero vamos a guardar el valor para no sobrecalentar logica
-                                pass 
-                            else:
-                                precios_extraidos[crop_standard] = {
-                                    "precio_usd_tn": val,
-                                    "fuente": "BCR Rosario Oficial"
-                                }
-            
-            await browser.close()
-            
+        found_prices = await asyncio.to_thread(sync_scrape)
+        for c, v in found_prices.items():
+            precios_extraidos[c] = {"precio_usd_tn": v, "fuente": "BCR Rosario (Oficial)"}
     except Exception as e:
-        logger.error(f"Error scraping BCR con Playwright: {e}")
+        logger.error(f"Error scraping BCR con BS4: {e}")
         scrape_error = str(e)
 
     # Combinamos lo extraído con el fallback
@@ -126,7 +95,6 @@ async def scrape_bccba_prices() -> Dict[str, Any]:
         if cropKey in precios_extraidos:
             precios_finales[cropKey] = precios_extraidos[cropKey]
         else:
-            # Soja Segunda puede copiar Soja
             if cropKey == "Soja Segunda" and "Soja" in precios_extraidos:
                 precios_finales[cropKey] = precios_extraidos["Soja"]
             else:
@@ -142,7 +110,7 @@ async def scrape_bccba_prices() -> Dict[str, Any]:
         "error": scrape_error
     }
 
-    if not scrape_error: # Solo cachear si no hubo error
+    if not scrape_error and len(precios_extraidos) > 0:
         _price_cache = result
         _cache_timestamp = time.time()
 

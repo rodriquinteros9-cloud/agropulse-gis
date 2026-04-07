@@ -1318,7 +1318,7 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
                 <div>
                   <h4 className="text-base font-extrabold text-slate-800">Análisis de Sensibilidad</h4>
                   <p className="text-[11px] text-slate-400 font-medium mt-0.5">
-                    Matriz de <strong>Precio Pizarra (Percentiles Históricos P5–P95)</strong> × <strong>Rendimiento</strong>. Fuente: World Bank Pink Sheet.
+                    Matriz de <strong>Precio Pizarra (+/- 20%)</strong> × <strong>Rendimiento</strong>. Fuente: BCR Oficial.
                   </p>
                 </div>
               </div>
@@ -1455,20 +1455,11 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
                 </span>
                 {sensitivityData.price_distribution && (
                   <>
-                    <span className="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 font-bold border border-amber-200">
-                      P5: ${sensitivityData.price_distribution.p5}/tn
-                    </span>
-                    <span className="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 font-bold border border-blue-200">
-                      Mediana (P50): ${sensitivityData.price_distribution.p50}/tn
-                    </span>
-                    <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">
-                      P95: ${sensitivityData.price_distribution.p95}/tn
-                    </span>
                     <span className="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 font-bold border border-indigo-200">
-                      Actual: ${sensitivityData.price_distribution.current}/tn
+                      Precio Referencia: ${sensitivityData.price_distribution.current}/tn
                     </span>
                     <span className="px-2.5 py-1 rounded-lg bg-slate-50 text-slate-500 font-semibold">
-                      {sensitivityData.price_distribution.count} meses · {sensitivityData.price_distribution.from_date} → {sensitivityData.price_distribution.to_date}
+                      Variación: +/- 20%
                     </span>
                   </>
                 )}
