@@ -30,7 +30,7 @@ const FilmstripCard: React.FC<FilmstripCardProps> = ({ image, isActive, onClick 
       onClick={onClick}
       className={cn(
         "shrink-0 w-20 cursor-pointer rounded-lg border-2 overflow-hidden transition-all duration-150 relative bg-white",
-        isActive ? "border-[#639922] shadow-md shadow-emerald-900/10 scale-105 z-10" : "border-slate-200 hover:border-slate-300"
+        isActive ? "border-[#639922] shadow-md shadow-cyan-900/10 scale-105 z-10" : "border-slate-200 hover:border-slate-300"
       )}
     >
       <div className="w-full h-[58px] bg-[#2d3d2a] relative overflow-hidden flex items-center justify-center">

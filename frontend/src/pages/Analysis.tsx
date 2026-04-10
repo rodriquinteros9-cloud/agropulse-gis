@@ -230,7 +230,7 @@ export default function Analysis({ appState, setAppState }: { appState: AppState
                 <select
                     value={activeLotId}
                     onChange={(e) => setSelectedLotId(e.target.value)}
-                    className="w-full text-base rounded-xl px-4 py-3 outline-none transition font-bold bg-white border border-slate-200 text-slate-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 shadow-sm appearance-none"
+                    className="w-full text-base rounded-xl px-4 py-3 outline-none transition font-bold bg-white border border-slate-200 text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-sm appearance-none"
                     style={{ backgroundImage: "url(\"data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 1rem center", backgroundSize: "1.2em" }}
                 >
                     {lotes.map((lote: any) => (
@@ -260,7 +260,7 @@ export default function Analysis({ appState, setAppState }: { appState: AppState
                         {/* Superficie */}
                         <div className="agro-card p-8 flex flex-col items-center justify-center text-center">
                             <p className="text-xs font-bold uppercase tracking-widest mb-4 text-slate-400">Superficie del Lote</p>
-                            <div className="text-6xl font-extrabold mb-2 text-emerald-500 tracking-tight">
+                            <div className="text-6xl font-extrabold mb-2 text-cyan-500 tracking-tight">
                                 {selectedLot.area_ha.toFixed(2)}
                                 <span className="text-2xl font-bold ml-1.5 text-slate-400">ha</span>
                             </div>
@@ -273,7 +273,7 @@ export default function Analysis({ appState, setAppState }: { appState: AppState
 
                             {loadingWeather ? (
                                 <div className="flex flex-col items-center justify-center py-4">
-                                    <Loader2 className="animate-spin mb-3 text-emerald-500" size={28} />
+                                    <Loader2 className="animate-spin mb-3 text-cyan-500" size={28} />
                                     <span className="text-sm font-medium text-slate-500">Cargando clima…</span>
                                 </div>
                             ) : weatherError ? (
@@ -290,10 +290,10 @@ export default function Analysis({ appState, setAppState }: { appState: AppState
                                         <span className="text-xl font-extrabold text-slate-800">{weatherData.humidity}%</span>
                                         <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600/80 mt-1">Humedad</span>
                                     </div>
-                                    <div className="flex flex-col items-center p-4 rounded-2xl bg-emerald-50 border border-emerald-100 shadow-sm">
-                                        <Wind size={24} className="mb-2 text-emerald-500" />
+                                    <div className="flex flex-col items-center p-4 rounded-2xl bg-cyan-50 border border-cyan-100 shadow-sm">
+                                        <Wind size={24} className="mb-2 text-cyan-500" />
                                         <span className="text-xl font-extrabold text-slate-800">{weatherData.wind_speed}</span>
-                                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600/80 mt-1">{weatherData.wind_unit || 'km/h'}</span>
+                                        <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-600/80 mt-1">{weatherData.wind_unit || 'km/h'}</span>
                                     </div>
                                 </div>
                             ) : null}
@@ -434,7 +434,7 @@ export default function Analysis({ appState, setAppState }: { appState: AppState
                         <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-5 mb-6">
                             <div>
                                 <h3 className="text-lg font-extrabold flex items-center gap-2 text-slate-800 tracking-tight">
-                                    <Activity className="text-emerald-500" size={20} />
+                                    <Activity className="text-cyan-500" size={20} />
                                     Evolución de Vigor (NDVI) y Uniformidad (CV%)
                                 </h3>
                                 <p className="text-sm mt-1 font-medium text-slate-500">Biomasa satelital — Sentinel-2 / Earth Engine.</p>
@@ -468,7 +468,7 @@ export default function Analysis({ appState, setAppState }: { appState: AppState
                                 <button
                                     onClick={() => fetchTimeSeries(false)}
                                     disabled={loadingTimeSeries}
-                                    className="btn-primary text-sm px-5 py-2.5 shadow-emerald-500/20"
+                                    className="btn-primary text-sm px-5 py-2.5 shadow-cyan-500/20"
                                 >
                                     {loadingTimeSeries ? <Loader2 size={16} className="animate-spin" /> : <TrendingUp size={16} />}
                                     Analizar
@@ -488,12 +488,12 @@ export default function Analysis({ appState, setAppState }: { appState: AppState
                         {/* Chart Area */}
                         <div className="w-full h-[450px] flex items-center justify-center bg-white rounded-2xl border border-slate-100 p-5 relative shadow-inner">
                             {fromCache === true && !loadingTimeSeries && (
-                                <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold px-3 py-1.5 rounded-full shadow-sm z-10">
-                                    <Zap size={12} className="fill-emerald-500 text-emerald-500" /> Caché instantáneo
+                                <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-cyan-50 text-cyan-700 border border-cyan-200 text-xs font-bold px-3 py-1.5 rounded-full shadow-sm z-10">
+                                    <Zap size={12} className="fill-cyan-500 text-cyan-500" /> Caché instantáneo
                                 </div>
                             )}
                             {loadingTimeSeries ? (
-                                <div className="flex flex-col items-center justify-center text-emerald-600">
+                                <div className="flex flex-col items-center justify-center text-cyan-600">
                                     <Loader2 size={48} className="animate-spin mb-5" />
                                     <span className="font-bold text-lg text-slate-800">Calculando en Google Earth Engine...</span>
                                     <span className="text-sm text-slate-500 mt-2 font-medium">Solo la primera vez tarda. Las siguientes serán instantáneas.</span>
@@ -551,7 +551,7 @@ export default function Analysis({ appState, setAppState }: { appState: AppState
                             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
                                 {[{
                                     label: 'NDVI Reciente', value: timeSeriesData[timeSeriesData.length - 1]?.NDVI_Mean?.toFixed(2) || 'N/A',
-                                    bg: 'bg-emerald-50', border: 'border-emerald-100', color: 'text-emerald-600'
+                                    bg: 'bg-cyan-50', border: 'border-cyan-100', color: 'text-cyan-600'
                                 }, {
                                     label: 'CV% Reciente', value: `${timeSeriesData[timeSeriesData.length - 1]?.['CV_%']?.toFixed(1) || 'N/A'}%`,
                                     sub: 'Mayor % = lote desparejo',
@@ -588,12 +588,12 @@ export default function Analysis({ appState, setAppState }: { appState: AppState
                         <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-5 mb-6">
                             <div>
                                 <h3 className="text-lg font-extrabold flex items-center gap-2 text-slate-800 tracking-tight">
-                                    <Layers className="text-emerald-500" size={20} />
+                                    <Layers className="text-cyan-500" size={20} />
                                     Zonificación Intralote Simultánea (COS y pH)
                                 </h3>
                                 <p className="text-sm mt-1 font-medium text-slate-500">
                                     Análisis a 30m de resolución (0–30 cm) vía{' '}
-                                    <a href="https://github.com/openlandmap/soildb" target="_blank" rel="noreferrer" className="text-emerald-600 underline underline-offset-2">OpenLandMap-soildb</a>.
+                                    <a href="https://github.com/openlandmap/soildb" target="_blank" rel="noreferrer" className="text-cyan-600 underline underline-offset-2">OpenLandMap-soildb</a>.
                                 </p>
                             </div>
 
@@ -647,7 +647,7 @@ export default function Analysis({ appState, setAppState }: { appState: AppState
                                         }
                                     }}
                                     disabled={loadingHeatmap || !selectedLot}
-                                    className="btn-primary text-sm px-5 py-2.5 shadow-emerald-500/20"
+                                    className="btn-primary text-sm px-5 py-2.5 shadow-cyan-500/20"
                                 >
                                     {loadingHeatmap ? <Loader2 size={16} className="animate-spin" /> : <Layers size={16} />}
                                     Ejecutar Análisis
@@ -664,7 +664,7 @@ export default function Analysis({ appState, setAppState }: { appState: AppState
                         {/* Display Area for Two Maps */}
                         <div className="w-full flex justify-center bg-white rounded-2xl border border-slate-100 p-5 relative shadow-inner min-h-[400px]">
                             {loadingHeatmap ? (
-                                <div className="flex flex-col items-center justify-center text-emerald-600 py-16">
+                                <div className="flex flex-col items-center justify-center text-cyan-600 py-16">
                                     <Loader2 size={48} className="animate-spin mb-5" />
                                     <span className="font-bold text-lg text-slate-800">Generando zonificación en Earth Engine...</span>
                                     <span className="text-sm text-slate-500 mt-2 font-medium">Interpolando Carbono y pH simultáneamente.</span>
@@ -681,9 +681,9 @@ export default function Analysis({ appState, setAppState }: { appState: AppState
                                             />
                                         </div>
                                         <div className="grid grid-cols-3 gap-3">
-                                            <div className="rounded-xl p-4 flex flex-col justify-center border bg-emerald-50 border-emerald-100 shadow-sm">
-                                                <span className="text-[10px] font-bold uppercase tracking-wide mb-1 text-emerald-500 text-center">Media</span>
-                                                <span className="text-xl font-extrabold text-emerald-700 text-center">{heatmapData.socd.stats?.mean ?? '-'}</span>
+                                            <div className="rounded-xl p-4 flex flex-col justify-center border bg-cyan-50 border-cyan-100 shadow-sm">
+                                                <span className="text-[10px] font-bold uppercase tracking-wide mb-1 text-cyan-500 text-center">Media</span>
+                                                <span className="text-xl font-extrabold text-cyan-700 text-center">{heatmapData.socd.stats?.mean ?? '-'}</span>
                                             </div>
                                             <div className="rounded-xl p-4 flex flex-col justify-center border bg-slate-50 border-slate-200 shadow-sm">
                                                 <span className="text-[10px] font-bold uppercase tracking-wide mb-1 text-slate-500 text-center">Mín - Máx</span>

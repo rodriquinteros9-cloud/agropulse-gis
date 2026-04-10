@@ -16,3 +16,6 @@ httpx
 beautifulsoup4
 playwright
 openpyxl
+xlrd
+pyRofex
+apscheduler

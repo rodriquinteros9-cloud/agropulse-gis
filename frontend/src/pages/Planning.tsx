@@ -137,7 +137,7 @@ export default function Planning({ appState }: { appState: AppState, setAppState
                         {/* Live/Fallback Status Badge */}
                         <div className={`px-3 py-1.5 rounded-full flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest border shadow-sm ${usingFallback
                                 ? 'bg-amber-50 border-amber-200 text-amber-700'
-                                : 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                                : 'bg-cyan-50 border-cyan-200 text-cyan-700'
                             }`}>
                             {usingFallback ? <WifiOff size={11} /> : <Wifi size={11} />}
                             {usingFallback ? 'Fallback' : 'Live'}
@@ -267,8 +267,8 @@ export default function Planning({ appState }: { appState: AppState, setAppState
                     {/* Panel Inferior: Insights Cards */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                         <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 border border-slate-100 shadow-md flex flex-col gap-3">
-                            <div className="p-2.5 bg-emerald-50 rounded-xl self-start border border-emerald-100">
-                                <ShieldCheck className="w-6 h-6 text-emerald-600" strokeWidth={2} />
+                            <div className="p-2.5 bg-cyan-50 rounded-xl self-start border border-cyan-100">
+                                <ShieldCheck className="w-6 h-6 text-cyan-600" strokeWidth={2} />
                             </div>
                             <div>
                                 <h4 className="text-sm font-black text-slate-800 tracking-wide mb-1.5">Consenso de Modelos</h4>
@@ -368,7 +368,7 @@ export default function Planning({ appState }: { appState: AppState, setAppState
                                     >
                                         <span>{crop.key}</span>
                                         {isActive && (
-                                            <CheckCircle2 size={14} className="text-emerald-500 ml-0.5" />
+                                            <CheckCircle2 size={14} className="text-cyan-500 ml-0.5" />
                                         )}
                                     </button>
                                 );
@@ -411,7 +411,7 @@ export default function Planning({ appState }: { appState: AppState, setAppState
                                             <td key={crop} className="px-6 py-4 text-center">
                                                 <button
                                                     onClick={() => toggleDecision(lote, crop)}
-                                                    className={`inline-flex items-center justify-center p-2.5 rounded-full transition-all duration-300 ${isSelected ? 'text-white bg-emerald-500 scale-[1.15] shadow-lg shadow-emerald-500/40' : 'text-slate-300 bg-slate-50 border border-slate-200/60 hover:text-slate-500 hover:bg-white hover:border-slate-300 hover:scale-110'}`}
+                                                    className={`inline-flex items-center justify-center p-2.5 rounded-full transition-all duration-300 ${isSelected ? 'text-white bg-cyan-500 scale-[1.15] shadow-lg shadow-cyan-500/40' : 'text-slate-300 bg-slate-50 border border-slate-200/60 hover:text-slate-500 hover:bg-white hover:border-slate-300 hover:scale-110'}`}
                                                 >
                                                     {isSelected ? (
                                                         <CheckCircle2 className="w-[1.125rem] h-[1.125rem]" strokeWidth={3} />

@@ -281,7 +281,7 @@ export default function CommodityDashboard() {
               <>
                 {/* Semáforo principal */}
                 <div className={`rounded-xl p-5 border flex flex-col md:flex-row md:items-center gap-4 ${
-                  activeRatio.current.signal === 'favorable' ? 'bg-emerald-50 border-emerald-200' :
+                  activeRatio.current.signal === 'favorable' ? 'bg-cyan-50 border-cyan-200' :
                   activeRatio.current.signal === 'neutral' ? 'bg-amber-50 border-amber-200' :
                   'bg-rose-50 border-rose-200'
                 }`}>
@@ -305,7 +305,7 @@ export default function CommodityDashboard() {
                     </div>
                     <div className="text-center">
                       <div className="text-[10px] font-bold text-slate-400 uppercase">vs. Prom.</div>
-                      <div className={`text-2xl font-black ${activeRatio.current.pct_vs_avg <= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                      <div className={`text-2xl font-black ${activeRatio.current.pct_vs_avg <= 0 ? 'text-cyan-600' : 'text-rose-600'}`}>
                         {activeRatio.current.pct_vs_avg > 0 ? '+' : ''}{activeRatio.current.pct_vs_avg.toFixed(0)}%
                       </div>
                     </div>
@@ -381,7 +381,7 @@ export default function CommodityDashboard() {
                   <Info className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />
                   <div className="text-xs text-indigo-700 leading-relaxed">
                     <strong>¿Cómo leer este gráfico?</strong> La línea muestra cuántos quintales de grano se necesitan para comprar 1 tonelada de insumo.
-                    Cuando la línea está <strong>por debajo del promedio</strong> (línea punteada), el insumo está relativamente <strong className="text-emerald-700">barato</strong> — es buen momento para comprar.
+                    Cuando la línea está <strong>por debajo del promedio</strong> (línea punteada), el insumo está relativamente <strong className="text-cyan-700">barato</strong> — es buen momento para comprar.
                     Cuando está por encima, está relativamente <strong className="text-rose-600">caro</strong>.
                     La zona sombreada muestra el rango intercuartílico (P25-P75) de los últimos {new Date().getFullYear() - fromYear} años.
                   </div>
@@ -467,7 +467,7 @@ export default function CommodityDashboard() {
                 const isAboveAvg = pctVsAvg > 0;
                 // Si es grano y está arriba del promedio es bueno (verde). Si es insumo y está abajo del promedio es bueno (verde).
                 const isFavorable = isGrain ? isAboveAvg : !isAboveAvg;
-                const colorClass = isFavorable ? 'text-emerald-600 bg-emerald-50 border-emerald-200' : 'text-rose-600 bg-rose-50 border-rose-200';
+                const colorClass = isFavorable ? 'text-cyan-600 bg-cyan-50 border-cyan-200' : 'text-rose-600 bg-rose-50 border-rose-200';
 
                 return (
                   <div key={key} className="bg-white rounded-xl border border-slate-200 p-3 flex flex-col">

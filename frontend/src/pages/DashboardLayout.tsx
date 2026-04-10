@@ -43,72 +43,62 @@ export default function DashboardLayout({ appState, setAppState }: { appState: A
     return (
         <div className="flex h-screen overflow-hidden" style={{ background: 'var(--color-background)' }}>
 
-            {/* ── Sidebar ── */}
-            <aside className="sidebar w-64 flex flex-col shrink-0 shadow-lg">
+            {/* ── Sidebar estilo Experto Bayer ── */}
+            <aside className="sidebar w-[72px] flex flex-col shrink-0 items-center">
 
-                {/* Logo */}
-                <div className="px-5 pt-8 pb-6 border-b border-slate-200/60 flex justify-center">
-                    <img src="/logo.png" alt="AgroPulse" className="h-16 object-contain drop-shadow-sm" />
+                {/* Logo mark */}
+                <div className="w-full flex justify-center py-5 border-b border-[var(--color-border)]">
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #00bcff 0%, #89d329 100%)' }}>
+                        <span className="text-white font-black text-lg tracking-tighter">G</span>
+                    </div>
                 </div>
 
-                {/* Nav */}
-                <nav className="flex-1 px-4 py-6 space-y-2">
-                    <p className="px-3 text-[11px] font-bold tracking-widest uppercase text-slate-400 mb-4">
-                        Módulos
-                    </p>
-
+                {/* Nav items — Iconos centrados con texto abajo (estilo Bayer) */}
+                <nav className="flex-1 w-full flex flex-col items-center pt-4 gap-1 px-1">
                     <NavLink
                         to="/dashboard/ranking"
-                        className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
+                        className={({ isActive }) => `sidebar-nav-item w-full ${isActive ? 'active' : ''}`}
                     >
-                        <BarChart3 size={18} />
-                        Ranking de Lotes
+                        <BarChart3 size={20} strokeWidth={2} />
+                        <span>Ranking</span>
                     </NavLink>
 
                     <NavLink
                         to="/dashboard/analysis"
-                        className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
+                        className={({ isActive }) => `sidebar-nav-item w-full ${isActive ? 'active' : ''}`}
                     >
-                        <LineChart size={18} />
-                        Análisis Individual
+                        <LineChart size={20} />
+                        <span>Análisis</span>
                     </NavLink>
 
                     <NavLink
                         to="/dashboard/planning"
-                        className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
+                        className={({ isActive }) => `sidebar-nav-item w-full ${isActive ? 'active' : ''}`}
                     >
-                        <ClipboardList size={18} />
-                        Planificación
+                        <ClipboardList size={20} />
+                        <span>Planificar</span>
                     </NavLink>
                 </nav>
 
-                {/* Footer: stats + upload */}
-                <div className="px-4 pb-6 space-y-4">
-                    {/* Lot stats */}
-                    <div className="rounded-2xl p-4 border border-slate-200/60 " style={{ background: 'rgba(255,255,255,0.6)', boxShadow: 'inset 0 2px 4px 0 rgba(0,0,0,0.01)' }}>
-                        <p className="text-[11px] font-bold tracking-widest uppercase text-slate-400 mb-3">
-                            Datos Activos
-                        </p>
-                        <div className="flex items-center gap-2 mb-2">
-                            <Layers size={14} className="text-emerald-500 shrink-0" />
-                            <span className="text-sm text-slate-600">
-                                <span className="font-extrabold text-slate-900">{count}</span> lotes cargados
-                            </span>
+                {/* Footer: Upload + stats compact */}
+                <div className="w-full flex flex-col items-center gap-3 px-2 pb-4 border-t border-[var(--color-border)] pt-4">
+                    {/* Lot count badge */}
+                    <div className="flex flex-col items-center gap-0.5">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-full" style={{ background: 'rgba(0, 188, 255, 0.1)' }}>
+                            <Layers size={14} style={{ color: 'var(--color-accent)' }} />
                         </div>
-                        <div className="flex items-center gap-2">
-                            <div className="w-3.5 h-3.5 rounded-sm shrink-0 bg-emerald-400 shadow-sm" />
-                            <span className="text-sm text-slate-600">
-                                <span className="font-extrabold text-slate-900">{area}</span> ha totales
-                            </span>
-                        </div>
+                        <span className="text-[10px] font-bold" style={{ color: 'var(--color-text)' }}>{count}</span>
+                        <span className="text-[9px] font-medium" style={{ color: 'var(--color-muted)' }}>{area} ha</span>
                     </div>
 
-                    {/* Upload new KML */}
-                    <div className="relative rounded-xl border border-dashed border-slate-300 hover:border-emerald-500/60 transition-colors cursor-pointer group bg-slate-50/50 hover:bg-emerald-50/30">
-                        <button className="flex items-center justify-center gap-2 w-full py-3 px-3 text-sm font-semibold text-slate-500 group-hover:text-emerald-600 transition-colors">
-                            {loading ? <Loader2 className="animate-spin" size={16} /> : <FileUp size={16} />}
-                            {loading ? "Procesando..." : "Subir nuevo KML"}
-                        </button>
+                    {/* Upload button */}
+                    <div className="relative w-10 h-10 rounded-lg border border-dashed flex items-center justify-center cursor-pointer transition-colors"
+                         style={{ borderColor: 'var(--color-border)' }}
+                         onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--color-accent)'; e.currentTarget.style.background = 'rgba(0,188,255,0.04)'; }}
+                         onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.background = 'transparent'; }}
+                         title="Subir nuevo KML"
+                    >
+                        {loading ? <Loader2 className="animate-spin" size={16} style={{ color: 'var(--color-accent)' }} /> : <FileUp size={16} style={{ color: 'var(--color-muted)' }} />}
                         <input
                             type="file" accept=".kml,.geojson,.json"
                             onChange={handleSidebarUpload}
@@ -117,12 +107,16 @@ export default function DashboardLayout({ appState, setAppState }: { appState: A
                         />
                     </div>
 
-                    {/* Back to portal */}
+                    {/* Back */}
                     <button
                         onClick={() => navigate('/')}
-                        className="w-full flex items-center justify-center gap-2 py-2 text-xs font-semibold text-slate-400 hover:text-slate-700 transition-colors"
+                        className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+                        style={{ color: 'var(--color-muted)' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--color-text)'; e.currentTarget.style.background = 'rgba(0,0,0,0.04)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-muted)'; e.currentTarget.style.background = 'transparent'; }}
+                        title="Volver al Portal"
                     >
-                        <ArrowLeft size={12} /> Volver al Portal
+                        <ArrowLeft size={16} />
                     </button>
                 </div>
             </aside>

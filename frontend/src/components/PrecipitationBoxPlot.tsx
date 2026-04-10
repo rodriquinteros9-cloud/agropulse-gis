@@ -342,7 +342,7 @@ export default function PrecipitationBoxPlot({ lotes, spatialData }: Precipitati
                     </div>
                     <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
                         <div className="flex items-center gap-2 mb-2.5">
-                            <TrendingUp size={15} className="text-emerald-500" />
+                            <TrendingUp size={15} className="text-cyan-500" />
                             <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Mes Más Lluvioso</span>
                         </div>
                         {(() => {

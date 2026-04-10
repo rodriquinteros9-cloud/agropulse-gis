@@ -1,7 +1,7 @@
 """
 Router del Análisis de Sensibilidad Avanzado.
 Expone endpoints para calcular matrices de sensibilidad Precio × Rendimiento
-con percentiles históricos de precios (World Bank Pink Sheet).
+con variaciones de +/- 32% sobre el precio pizarra actual (BCR).
 """
 from fastapi import APIRouter, Query
 from typing import Optional

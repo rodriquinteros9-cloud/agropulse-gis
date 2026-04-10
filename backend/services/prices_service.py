@@ -19,14 +19,14 @@ CACHE_TTL_SECONDS = 4 * 3600  # 4 horas
 
 # ── Retenciones vigentes ──
 RETENCIONES = {
-    "Soja": 0.33,
-    "Soja Segunda": 0.33,
-    "Maíz": 0.12,
-    "Trigo": 0.12,
-    "Girasol": 0.07,
-    "Sorgo": 0.12,
-    "Cebada": 0.12,
-    "Maní": 0.07,
+    "Soja": 0.24,
+    "Soja Segunda": 0.24,
+    "Maíz": 0.085,
+    "Trigo": 0.075,
+    "Girasol": 0.045,
+    "Sorgo": 0.085,
+    "Cebada": 0.075,
+    "Maní": 0.0,
     "Cultivo de Servicio": 0.0,
 }
 

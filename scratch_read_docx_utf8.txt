@@ -1,0 +1,67 @@
+﻿AN┴LISIS DE SENSIBILIDAD û IDEAS A IMPLEMENTAR
+Cultivos de InterΘs: Maφz, Trigo, Soja (por ahora)
+Tabla Precio en el disponible (usd/tn) vs rinde (qq/ha)
+Precio del disponible actual de aquφ: https://www.cac.bcr.com.ar/es/precios-de-pizarra. Jugar con un rango de precios de +/- 30% o 35% del precio actual.
+En lo que es rinde que exista un rango adecuado al rango de precios que hagamos. Ver si podemos implementar el promedio de los ·ltimos 5 a±os reportados para el centroide de todos los polφgonos del KML. Que el centroide se ubique a nivel departamental para obtener ese promedio de 5 a±os. 
+Que el cliente tenga la posibilidad de poner su rinde esperado (qq/ha). Si no usar el promedio de 5 a±os como referencia.
+Link para el rinde de referencia: https://datosestimaciones.magyp.gob.ar/reportes.php?reporte=Estimaciones 
+Tabla ejemplar (respetar unidades): 
+Generar un amplio rango de rendimientos. Ajustar bien con el precio actual (se puede jugar con el rango). Para precios y rinde hacer un rango de +/- 35% o 30%.
+Al lado de la tablita hacer un mini men· interactivo donde el cliente ponga; rinde esperado y precio si lo desea. Cargar rindes y precios automßticos, que el cliente los modifique si quiere. 
+C:\Users\rodri\Desktop\Working\Dashboard\anßlisis de sensibilidad. En esta ruta tienes un archivo ejemplar de como quiero que se vea, el mismo se llama: precio_vs_rinde_v2.
+Precio pizarra/rinde
+23
+28
+33
+38
+43
+271
+-29%
+-11%
+3%
+15%
+26%
+296
+-23%
+-5%
+8%
+21%
+33%
+321
+-19%
+0%
+13%
+26%
+39%
+331
+-17%
+1%
+15%
+28%
+41%
+341
+-15%
+3%
+16%
+30%
+44%
+
+Tabla de Margen Esperado en Secuencias (usd/ha)
+En esta parte vamos a tener que usar rindes y precios pizarra de los cultivos usados en la secuencia para visualizar mßrgenes y ver que combinaciones dan en mßrgenes positivos o negativos.
+Tener en cuenta los costos tφpicos de un barbecho (cßlculo automßtico y realista), es un caso especial no tiene ingresos, pero tiene costos.
+Cada celda debe ponerse en un color respecto al valor obtenido. Tener en cuenta una graduaci≤n de colores seg·n valores de margen. 
+Los costos/ha de los cultivos deben ser usados los de la herramienta de Rinde de Indiferencia (sumar ambos).
+En los precios usar los actuales para cada cultivo de aquφ: https://www.cac.bcr.com.ar/es/precios-de-pizarra.
+Cultivo
+Maφz
+Soja
+Promedio
+Barbecho
+-150
+-80
+
+Trigo
++200
++125
+
+

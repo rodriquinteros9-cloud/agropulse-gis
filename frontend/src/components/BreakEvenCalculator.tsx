@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo, useCallback, useRef, Fragment } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Legend } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { Calculator, AlertTriangle, RefreshCw, Info, MapPin, Settings2, Edit3, ChevronDown, ChevronUp, Save, Download, FolderOpen, Layers, Trash2, X } from 'lucide-react';
 import { CROP_REFERENCE_DATA, PUERTOS, TARIFA_FLETE_REFERENCIA, FECHA_TARIFA_FLETE } from '../config/cropReferenceData';
+import SequenceMarginTable from './SequenceMarginTable';
 
 const API_BASE = 'http://localhost:8000/api';
 
@@ -346,7 +347,7 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
   const renderSemaforo = (margenPct: number) => {
     if (margenPct >= 12) {
       return (
-        <span className="px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold whitespace-nowrap shadow-sm">
+        <span className="px-2.5 py-1.5 rounded-lg bg-cyan-50 text-cyan-700 border border-cyan-200 text-xs font-bold whitespace-nowrap shadow-sm">
           🟢 +{margenPct.toFixed(1)}% sobre RI
         </span>
       );
@@ -393,7 +394,6 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
   const [sensitivityData, setSensitivityData] = useState<any>(null);
   const [sensitivityLoading, setSensitivityLoading] = useState(false);
   const [sensitivityError, setSensitivityError] = useState('');
-  const [sensitivityFromYear, setSensitivityFromYear] = useState(2015);
   const [sensitivityDisplayMode, setSensitivityDisplayMode] = useState<'usd' | 'pct'>('pct');
   const [sensitivityOverrides, setSensitivityOverrides] = useState<Record<string, {
     costos_totales?: number | '';
@@ -526,7 +526,6 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
         crop_id: sensitivityCropId,
         costos_totales: finalCostos.toFixed(2),
         flete_usd_tn: fleteUSD.toFixed(2),
-        from_year: sensitivityFromYear.toString(),
         current_price: finalPrecio.toFixed(2),
         rinde_esperado: finalRinde.toString(),
       });
@@ -549,7 +548,7 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
     } finally {
       setSensitivityLoading(false);
     }
-  }, [sensitivityCropId, sensitivityFromYear, prices, priceOverrides, userOverrides, altoInsumos, conArriendo, fleteUSD, activeLot.center_lat, activeLot.center_lon, sensitivityOverrides]);
+  }, [sensitivityCropId, prices, priceOverrides, userOverrides, altoInsumos, conArriendo, fleteUSD, activeLot.center_lat, activeLot.center_lon, sensitivityOverrides]);
 
   // Debounce: solo fetch cuando cambian los parámetros (con delay para no saturar)
   useEffect(() => {
@@ -650,14 +649,14 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
         {/* Exportar PDF */}
         <button
           onClick={exportPDF}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white text-[11px] font-bold rounded-lg hover:bg-emerald-700 transition-colors shadow-sm shrink-0"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-600 text-white text-[11px] font-bold rounded-lg hover:bg-cyan-700 transition-colors shadow-sm shrink-0"
         >
           <Download size={13} /> Exportar PDF
         </button>
 
         {/* Indicador de guardado */}
         {savedIndicator && (
-          <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 animate-pulse">
+          <span className="text-[11px] font-bold text-cyan-600 bg-cyan-50 px-3 py-1.5 rounded-lg border border-cyan-200 animate-pulse">
             ✓ {savedIndicator}
           </span>
         )}
@@ -714,7 +713,7 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
       {/* ════════════════════════════════════════════════════════════════ */}
       <div className="px-6 md:px-8 pt-5 pb-2 border-t border-slate-100 relative z-10 print:hidden">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-xs font-black shadow-sm">1</div>
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-500 to-teal-600 flex items-center justify-center text-white text-xs font-black shadow-sm">1</div>
           <div>
             <h4 className="text-base font-extrabold text-slate-800">Tabla de Rinde de Indiferencia</h4>
             <p className="text-[11px] text-slate-400 font-medium mt-0.5">Rendimiento mínimo de equilibrio por cultivo. Hacé clic en un cultivo para personalizar sus costos.</p>
@@ -864,7 +863,6 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
                 <th className="px-3 py-4 text-center">Neto Tranquera<br/><span className="font-medium normal-case tracking-normal">(USD/tn)</span></th>
                 <th className="px-3 py-4 text-right">Costos Totales<br/><span className="font-medium normal-case tracking-normal">(USD/ha)</span></th>
                 <th className="px-3 py-4 text-center">RI<br/><span className="font-medium normal-case tracking-normal">(qq/ha)</span></th>
-                <th className="px-5 py-4">Situación</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -977,7 +975,7 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
                     </td>
                     <td className="px-3 py-4 text-center">
                       {precioNetoQq > 0 ? (
-                        <div className="font-bold text-emerald-700 font-mono">${precioNetoTn.toFixed(0)}</div>
+                        <div className="font-bold text-cyan-700 font-mono">${precioNetoTn.toFixed(0)}</div>
                       ) : (
                         <div className="font-bold text-rose-500 font-mono text-xs">Negativo</div>
                       )}
@@ -1001,14 +999,11 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
                         <span className="text-rose-500 text-xs font-bold">N/A</span>
                       )}
                     </td>
-                    <td className="px-5 py-4">
-                      {precioNetoQq > 0 ? renderSemaforo(margenPct) : <span className="text-slate-300 font-bold">—</span>}
-                    </td>
                   </tr>
                   
                   {expandedCropId === crop.id && (
                     <tr className="bg-blue-50/20 border-b border-blue-100/50 shadow-inner print:hidden">
-                      <td colSpan={6} className="px-5 py-4">
+                      <td colSpan={5} className="px-5 py-4">
                         <div className="bg-white rounded-xl p-5 shadow-sm border border-blue-100 flex flex-col gap-5 w-full">
                            {/* HEADER DEL PANEL */}
                            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
@@ -1055,9 +1050,9 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
                                <span className="text-[9px] font-bold text-rose-400 uppercase">− Comerc. ({crop.comercializacionPct}%) + Secada</span>
                                <span className="text-sm font-bold text-rose-600">−${(gastosComerciales + crop.secadaUsdTn).toFixed(1)}</span>
                              </div>
-                             <div className="flex flex-col border-l-2 border-emerald-300 pl-3">
-                               <span className="text-[9px] font-bold text-emerald-600 uppercase">= Neto Tranquera</span>
-                               <span className="text-sm font-black text-emerald-700">${precioNetoTn.toFixed(0)}/tn</span>
+                             <div className="flex flex-col border-l-2 border-cyan-300 pl-3">
+                               <span className="text-[9px] font-bold text-cyan-600 uppercase">= Neto Tranquera</span>
+                               <span className="text-sm font-black text-cyan-700">${precioNetoTn.toFixed(0)}/tn</span>
                              </div>
                            </div>
                            
@@ -1072,7 +1067,7 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
                                {/* SECCIÓN COSTOS DIRECTOS */}
                                <div>
                                    <div className="flex justify-between items-end mb-3 border-b border-slate-200 pb-1">
-                                       <h4 className="font-bold text-xs uppercase tracking-wide text-slate-700">Costos Directos <span className="text-[9px] font-normal lowercase tracking-normal text-slate-400">(Insumos, Labores, Cosecha, Seguro)</span></h4>
+                                       <h4 className="font-bold text-xs uppercase tracking-wide text-slate-700">Costos Directos de Producción <span className="text-[9px] font-normal lowercase tracking-normal text-slate-400">(Labores, Insumos, Cosecha y Seguros)</span></h4>
                                        <span className="text-[11px] font-black text-slate-800 bg-slate-100 px-2 py-0.5 rounded">
                                            Subtotal: ${costosDirectos.toLocaleString(undefined, { maximumFractionDigits: 0 })} USD/ha
                                        </span>
@@ -1085,9 +1080,9 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
                                         { key: 'herbicida', label: 'Herbicidas', defaultHint: null },
                                         { key: 'insecticidas', label: 'Insecticidas', defaultHint: null },
                                         { key: 'fungicidas', label: 'Fungicidas', defaultHint: null },
-                                        { key: 'seguros', label: 'Seguro (Granizo)', defaultHint: 0 },
-                                        { key: 'labranza', label: 'Labores / Aplic.', defaultHint: null },
-                                        { key: 'cosecha', label: 'Cosecha', defaultHint: defaultCosecha },
+                                        { key: 'seguros', label: 'Seguro Agrícola', defaultHint: 0 },
+                                        { key: 'labranza', label: 'Labores (Siembra/Apli.)', defaultHint: null },
+                                        { key: 'cosecha', label: 'Cosecha (Contratista)', defaultHint: defaultCosecha },
                                       ].map(f => {
                                         const val = (override as any)[f.key];
                                         const isSet = val !== undefined;
@@ -1119,9 +1114,9 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
                                <div>
                                    <div className="flex justify-between items-end mb-3 border-b border-slate-200 pb-1">
                                        <h4 className="font-bold text-xs uppercase tracking-wide text-slate-700 flex items-center gap-2">
-                                           Costos Indirectos
+                                           Gastos de Estructura (Indirectos)
                                            <span className="text-[9px] font-normal lowercase tracking-normal text-slate-400">
-                                              (Fijos y Estructurales)
+                                              (Arrendamiento, Admin, Impuestos, Amortizaciones)
                                            </span>
                                        </h4>
                                        <span className="text-[11px] font-black text-slate-800 bg-slate-100 px-2 py-0.5 rounded">
@@ -1133,10 +1128,10 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
                                    </div>
                                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
                                       {[
-                                        { key: 'arriendo', label: `Alquiler (${(crop.arriendoPctAnual * 100).toFixed(0)}% anual)`, defaultHint: defaultArriendoQq.toFixed(1), unit: 'qq' },
-                                        { key: 'estructura', label: 'Estructura / Admin', defaultHint: '0' },
-                                        { key: 'impuestos', label: 'Tasas / Impuestos', defaultHint: '0' },
-                                        { key: 'amortizaciones', label: 'Amortización Eq.', defaultHint: '0' },
+                                        { key: 'arriendo', label: `Arrendamiento (${(crop.arriendoPctAnual * 100).toFixed(0)}% anual)`, defaultHint: defaultArriendoQq.toFixed(1), unit: 'qq' },
+                                        { key: 'estructura', label: 'Estructura y Admin.', defaultHint: '0' },
+                                        { key: 'impuestos', label: 'Impuestos Fijos (Tasas)', defaultHint: '0' },
+                                        { key: 'amortizaciones', label: 'Amortizaciones (Eq/Mej)', defaultHint: '0' },
                                       ].map(f => {
                                         const val = (override as any)[f.key];
                                         const isSet = val !== undefined;
@@ -1260,7 +1255,7 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
                                 <span className="w-2 h-2 rounded-full" style={{ background: p.color }} />
                                 <span className="font-semibold text-slate-600">{p.name}</span>
                               </div>
-                              <span className={`font-bold tabular-nums ${val >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                              <span className={`font-bold tabular-nums ${val >= 0 ? 'text-cyan-600' : 'text-rose-600'}`}>
                                 {val >= 0 ? '+' : ''}${val.toLocaleString()}
                               </span>
                             </div>
@@ -1318,27 +1313,13 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
                 <div>
                   <h4 className="text-base font-extrabold text-slate-800">Análisis de Sensibilidad</h4>
                   <p className="text-[11px] text-slate-400 font-medium mt-0.5">
-                    Matriz de <strong>Precio Pizarra (+/- 20%)</strong> × <strong>Rendimiento</strong>. Fuente: BCR Oficial.
+                    Matriz de <strong>Precio Pizarra (+/- 32%)</strong> × <strong>Rendimiento</strong>. Fuente: BCR Oficial.
                   </p>
                 </div>
               </div>
 
-              {/* Controles: Año base + Modo de visualización */}
+              {/* Controles: Modo de visualización */}
               <div className="flex items-center gap-3 flex-wrap">
-                {/* Selector de año base */}
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">Desde:</span>
-                  <select
-                    value={sensitivityFromYear}
-                    onChange={(e) => setSensitivityFromYear(parseInt(e.target.value))}
-                    className="bg-white border border-slate-200 text-[11px] font-bold text-slate-700 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500 shadow-sm"
-                  >
-                    {[2000, 2005, 2010, 2015, 2018, 2020].map(y => (
-                      <option key={y} value={y}>{y}</option>
-                    ))}
-                  </select>
-                </div>
-
                 {/* Toggle USD / % */}
                 <div className="flex bg-slate-100 p-0.5 rounded-lg">
                   <button
@@ -1362,55 +1343,54 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
               </div>
             </div>
 
-            {/* Toggle buttons para seleccionar cultivo */}
-            <div className="flex flex-wrap gap-2">
-              {CROP_REFERENCE_DATA.map(crop => {
-                const isActive = sensitivityCropId === crop.id;
-                return (
-                  <button
-                    key={crop.id}
-                    onClick={() => setSensitivityCropId(crop.id)}
-                    className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-2 border ${
-                      isActive
-                        ? 'text-white shadow-sm'
-                        : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'
-                    }`}
-                    style={isActive ? { background: MB_COLORS[crop.id] || '#666', borderColor: MB_COLORS[crop.id] || '#666' } : {}}
-                  >
-                    <span className="w-2 h-2 rounded-full" style={{ background: isActive ? '#fff' : (MB_COLORS[crop.id] || '#666') }} />
-                    {crop.name}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Error de sensibilidad */}
-            {sensitivityError && (
-              <div className="px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-2 text-sm font-medium text-amber-700">
-                <AlertTriangle size={16} /> {sensitivityError}
-              </div>
-            )}
-
-            {/* Configuración Rápida de Sensibilidad (Manual Overrides) */}
-            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
-              <h5 className="text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-2">
-                <Edit3 size={14} className="text-amber-500" />
-                Configuración del Escenario Actual
-              </h5>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
-                    Costos USD/ha
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder={`Ref: ${sensitivityData?._auto_referenciales?.costosTotales || '...'}`}
-                    value={sensitivityOverrides[sensitivityCropId]?.costos_totales ?? ''}
-                    onChange={(e) => updateSensitivityOverride(sensitivityCropId, 'costos_totales', e.target.value === '' ? '' : Number(e.target.value))}
-                    className="w-full bg-white border border-slate-200 text-xs font-bold text-slate-700 rounded-lg px-2.5 py-2 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 placeholder:text-slate-300 placeholder:font-normal"
-                  />
+          {/* Layout Principal: Sidebar Izquierdo + Matriz Derecha */}
+          <div className="flex flex-col xl:flex-row gap-6 relative">
+            
+            {/* Panel Izquierdo: Configuración */}
+            <div className="w-full xl:w-64 shrink-0 flex flex-col gap-4">
+              
+              {/* Selección de Cultivo */}
+              <div>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+                  Cultivo
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {CROP_REFERENCE_DATA.map(crop => {
+                    const isActive = sensitivityCropId === crop.id;
+                    return (
+                      <button
+                        key={crop.id}
+                        onClick={() => setSensitivityCropId(crop.id)}
+                        className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-2 border ${
+                          isActive
+                            ? 'text-white shadow-sm'
+                            : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'
+                        }`}
+                        style={isActive ? { background: MB_COLORS[crop.id] || '#666', borderColor: MB_COLORS[crop.id] || '#666' } : {}}
+                      >
+                        <span className="w-2 h-2 rounded-full" style={{ background: isActive ? '#fff' : (MB_COLORS[crop.id] || '#666') }} />
+                        {crop.name}
+                      </button>
+                    );
+                  })}
                 </div>
+              </div>
+
+              {/* Error de sensibilidad */}
+              {sensitivityError && (
+                <div className="px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl flex flex-col gap-1 text-sm font-medium text-amber-700">
+                  <div className="flex items-center gap-2"><AlertTriangle size={16} /> Error</div>
+                  <div className="text-xs">{sensitivityError}</div>
+                </div>
+              )}
+
+              {/* Configuración Rápida de Sensibilidad (Manual Overrides) */}
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex flex-col gap-4">
+                <h5 className="text-[11px] font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                  <Edit3 size={14} className="text-amber-500" />
+                  Escenario Base
+                </h5>
+                
                 <div>
                   <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
                     Precio Pizarra (USD/tn)
@@ -1424,6 +1404,7 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
                     className="w-full bg-white border border-slate-200 text-xs font-bold text-slate-700 rounded-lg px-2.5 py-2 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 placeholder:text-slate-300 placeholder:font-normal"
                   />
                 </div>
+                
                 <div>
                   <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
                     Rinde Esperado (qq/ha)
@@ -1437,12 +1418,25 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
                     className="w-full bg-white border border-slate-200 text-xs font-bold text-slate-700 rounded-lg px-2.5 py-2 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 placeholder:text-slate-300 placeholder:font-normal"
                   />
                 </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                    Costos USD/ha
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder={`Ref: ${sensitivityData?._auto_referenciales?.costosTotales || '...'}`}
+                    value={sensitivityOverrides[sensitivityCropId]?.costos_totales ?? ''}
+                    onChange={(e) => updateSensitivityOverride(sensitivityCropId, 'costos_totales', e.target.value === '' ? '' : Number(e.target.value))}
+                    className="w-full bg-white border border-slate-200 text-xs font-bold text-slate-700 rounded-lg px-2.5 py-2 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 placeholder:text-slate-300 placeholder:font-normal"
+                  />
+                </div>
               </div>
-              <p className="text-[10px] text-slate-400 font-medium mt-3 italic mt-2 flex items-center gap-1.5">
-                <Info size={12}/>
-                Deja en blanco para usar la estimación calculada por el simulador principal.
-              </p>
             </div>
+
+            {/* Panel Derecho: Matriz */}
+            <div className="flex-1 min-w-0 flex flex-col gap-4">
 
             {/* Contexto del cultivo + distribución histórica */}
             {sensitivityData && (
@@ -1459,13 +1453,12 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
                       Precio Referencia: ${sensitivityData.price_distribution.current}/tn
                     </span>
                     <span className="px-2.5 py-1 rounded-lg bg-slate-50 text-slate-500 font-semibold">
-                      Variación: +/- 20%
+                      Variación: +/- 32%
                     </span>
                   </>
                 )}
               </div>
             )}
-          </div>
 
           {/* Loading state */}
           {sensitivityLoading && !sensitivityData && (
@@ -1521,21 +1514,19 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
                           </td>
                           {row.values.map((cell: any, colIdx: number) => {
                             const val = sensitivityDisplayMode === 'pct' ? cell.mb_pct : cell.mb_usd;
-                            const allVals = sensitivityData.matrix.flatMap((r: any) =>
-                              r.values.map((c: any) => sensitivityDisplayMode === 'pct' ? Math.abs(c.mb_pct) : Math.abs(c.mb_usd))
-                            );
-                            const maxAbs = Math.max(...allVals, 1);
-                            const intensity = Math.min(Math.abs(val) / maxAbs, 1);
-                            const alpha = 0.06 + intensity * 0.52;
+                            const pctForColor = cell.mb_pct;
                             const isCurrentCell = sensitivityData.current_cell?.row_idx === rowIdx && sensitivityData.current_cell?.col_idx === colIdx;
 
                             let bgColor: string;
-                            if (val > 0) {
-                              bgColor = `rgba(22, 163, 74, ${alpha})`;
-                            } else if (val < 0) {
-                              bgColor = `rgba(220, 38, 38, ${alpha})`;
+                            let textColor: string;
+                            if (pctForColor < -15) {
+                              bgColor = '#f09595'; textColor = '#501313';
+                            } else if (pctForColor < 0) {
+                              bgColor = '#fac775'; textColor = '#412402';
+                            } else if (pctForColor < 15) {
+                              bgColor = '#c0dd97'; textColor = '#27500a';
                             } else {
-                              bgColor = 'rgba(148, 163, 184, 0.08)';
+                              bgColor = '#97c459'; textColor = '#173404';
                             }
 
                             return (
@@ -1547,7 +1538,7 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
                                 style={{ background: bgColor }}
                                 title={`MB: $${cell.mb_usd} USD/ha | ${cell.mb_pct}% s/costos | Pizarra: $${cell.precio_pizarra}/tn | Neto: $${cell.precio_neto_qq}/qq`}
                               >
-                                <span className={`text-[10px] ${val >= 0 ? 'text-emerald-900' : 'text-rose-900'}`}>
+                                <span className="text-[10px]" style={{ color: textColor }}>
                                   {sensitivityDisplayMode === 'pct'
                                     ? `${val >= 0 ? '+' : ''}${val.toFixed(0)}%`
                                     : `${val >= 0 ? '+' : ''}${val.toLocaleString()}`
@@ -1567,33 +1558,36 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4 gap-3">
                 <div className="flex items-center gap-4 text-[10px] text-slate-400 font-medium">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-4 h-3 rounded" style={{ background: 'rgba(220, 38, 38, 0.4)' }} />
-                    <span>Margen Negativo</span>
+                    <span className="w-4 h-3 rounded" style={{ background: '#f09595' }} />
+                    <span>&lt; -15%</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="w-4 h-3 rounded bg-slate-100 border border-slate-200" />
-                    <span>Equilibrio</span>
+                    <span className="w-4 h-3 rounded" style={{ background: '#fac775' }} />
+                    <span>-15% a 0%</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="w-4 h-3 rounded" style={{ background: 'rgba(22, 163, 74, 0.4)' }} />
-                    <span>Margen Positivo</span>
+                    <span className="w-4 h-3 rounded" style={{ background: '#c0dd97' }} />
+                    <span>0% a +15%</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-4 h-3 rounded" style={{ background: '#97c459' }} />
+                    <span>&gt; +15%</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="w-3 h-3 rounded ring-2 ring-indigo-500 ring-inset bg-white" />
                     <span>Escenario actual</span>
                   </div>
                 </div>
-                <div className="text-[10px] text-slate-400 font-medium flex items-center gap-1.5">
-                  <Info size={12} className="text-slate-400" />
-                  <span>
-                    Fuente: {sensitivityData.price_distribution?.source || 'World Bank Pink Sheet'} · {sensitivityData.price_distribution?.is_historical ? 'Precios históricos reales' : 'Variación sintética'}
-                  </span>
-                </div>
+
               </div>
             </>
           )}
+          </div>
+        </div>
         </div>
       </div>
+
+      <SequenceMarginTable cropCalcs={mbChartData.cropCalcs} />
 
       {/* ════════════════════════════════════════════════════════════════ */}
       {/* FOOTER GENERAL                                                  */}
@@ -1622,6 +1616,7 @@ export default function BreakEvenCalculator({ lotes = [] }: { lotes?: Lote[] }) 
             <div className="mt-1 font-bold text-slate-400">Gravity — Dashboard Agropecuario</div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

@@ -1,44 +1,44 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 @import "tailwindcss";
 
-/* ─── Agro Premium Design System (Stitch Reference) ──────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   GRAVITY — Design System (Estilo Experto Bayer)
+   Decreto 877/2025 · Paleta Corporativa Agro
+   ═══════════════════════════════════════════════════════════════════════════ */
 @theme {
-  /* Brand greens — Vibrant Emerald */
-  --color-primary: #10B981;
-  /* Glowing emerald */
-  --color-primary-light: #34D399;
-  /* soft mint */
-  --color-primary-dark: #059669;
-  /* deep emerald shadow */
+  /* ── Brand Navy (Texto principal y UI) ── */
+  --color-primary: #10384f;          /* Navy principal — headings, sidebar */
+  --color-primary-light: #1a5276;    /* Navy claro — hover states */
+  --color-primary-dark: #0b2637;     /* Navy oscuro — active states */
 
-  /* Accent */
-  --color-accent: #3B82F6;
-  --color-accent-light: #60A5FA;
+  /* ── Accent Cyan (Marca, links, highlights) ── */
+  --color-accent: #00bcff;           /* Cyan Bayer — logo, links activos */
+  --color-accent-light: #5cd4ff;     /* Cyan suave */
 
-  /* Neutrals */
-  --color-background: #F8FAFC;
-  /* Very light crisp gray/blue */
-  --color-surface: #FFFFFF;
-  --color-border: #E2E8F0;
-  /* subtle slate border */
-  --color-muted: #94A3B8;
-  /* muted slate */
+  /* ── Action Green (CTAs, éxito) ── */
+  --color-action: #89d329;           /* Verde Bayer — botones primarios */
+  --color-action-dark: #6db51e;      /* Verde oscuro — hover */
 
-  /* Text */
-  --color-text: #0F172A;
-  /* Deep slate black */
-  --color-text-secondary: #475569;
+  /* ── Neutrals ── */
+  --color-background: #f5f5f5;       /* Gris cálido de fondo */
+  --color-surface: #ffffff;          /* Blanco puro — cards */
+  --color-border: #e0e0e0;          /* Gris borde sutil */
+  --color-muted: #8a9bae;           /* Gris azulado — texto secundario */
 
-  /* Semantic */
-  --color-success: #10B981;
-  --color-warning: #F59E0B;
-  --color-danger: #EF4444;
+  /* ── Text ── */
+  --color-text: #10384f;             /* Navy — texto principal */
+  --color-text-secondary: #5e7d8f;   /* Slate medio — texto secundario */
 
-  --font-inter: "Inter", sans-serif;
+  /* ── Semantic ── */
+  --color-success: #89d329;
+  --color-warning: #f4bc12;
+  --color-danger: #c20000;           /* Rojo Bayer */
 
-  /* Spacing / radii (referenced via Tailwind) */
-  --radius-card: 20px;
+  --font-inter: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  /* Spacing / radii */
+  --radius-card: 8px;                /* Bordes más contenidos estilo Bayer */
 }
 
 /* ─── Base ───────────────────────────────────────────────────────────────── */
@@ -48,81 +48,97 @@
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
-  h1,
-  h2,
-  h3,
-  h4 {
+  h1, h2, h3, h4 {
     font-weight: 700;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.01em;
     color: var(--color-text);
   }
 }
 
-/* ─── Chart & card refinements ───────────────────────────────────────────── */
-/* ─── Chart & card refinements ───────────────────────────────────────────── */
+/* ─── Cards ─────────────────────────────────────────────────────────────── */
 @layer components {
 
-  /* Agro Premium Card */
+  /* Card estilo Bayer: blanca, borde sutil, sombra ligera, esquinas 8px */
   .agro-card {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(226, 232, 240, 0.8);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
     border-radius: var(--radius-card);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
   }
 
   .agro-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 25px -5px rgba(16, 185, 129, 0.08), 0 8px 10px -6px rgba(16, 185, 129, 0.05);
-    border-color: rgba(16, 185, 129, 0.3);
-    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+    border-color: #c8d6e0;
   }
 
-  /* Primary button */
+  /* Botón primario — Navy oscuro, estilo Bayer "Ingresar" */
   .btn-primary {
     background: var(--color-primary);
     color: white;
     font-weight: 600;
-    border-radius: 12px;
-    padding: 0.6rem 1.4rem;
-    box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3), 0 2px 4px -2px rgba(16, 185, 129, 0.2);
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 6px;
+    padding: 0.65rem 1.5rem;
+    font-size: 0.875rem;
+    box-shadow: 0 1px 3px rgba(16, 56, 79, 0.2);
+    transition: all 0.2s ease;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.5rem;
     border: none;
+    letter-spacing: 0.01em;
   }
 
   .btn-primary:hover {
-    background: var(--color-primary-dark);
-    box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.4), 0 4px 6px -4px rgba(16, 185, 129, 0.2);
-    transform: translateY(-2px);
+    background: var(--color-primary-light);
+    box-shadow: 0 4px 8px rgba(16, 56, 79, 0.25);
   }
 
   .btn-primary:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 4px -1px rgba(16, 185, 129, 0.3);
+    background: var(--color-primary-dark);
+    box-shadow: 0 1px 2px rgba(16, 56, 79, 0.2);
   }
 
   .btn-primary:disabled {
     opacity: 0.5;
     pointer-events: none;
     box-shadow: none;
-    transform: none;
   }
 
-  /* Ghost/Secondary button */
+  /* Botón acción verde — estilo Bayer CTA */
+  .btn-action {
+    background: var(--color-action);
+    color: white;
+    font-weight: 700;
+    border-radius: 6px;
+    padding: 0.65rem 1.5rem;
+    font-size: 0.875rem;
+    box-shadow: 0 1px 3px rgba(137, 211, 41, 0.3);
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: none;
+  }
+
+  .btn-action:hover {
+    background: var(--color-action-dark);
+    box-shadow: 0 4px 8px rgba(137, 211, 41, 0.35);
+  }
+
+  /* Botón ghost / secundario */
   .btn-ghost {
     background: white;
     border: 1px solid var(--color-border);
     color: var(--color-text);
     font-weight: 600;
-    border-radius: 12px;
+    border-radius: 6px;
     padding: 0.6rem 1.4rem;
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 0.875rem;
+    box-shadow: none;
+    transition: all 0.2s ease;
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
@@ -131,75 +147,76 @@
   .btn-ghost:hover {
     border-color: var(--color-primary);
     color: var(--color-primary);
-    box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.15), 0 4px 6px -4px rgba(16, 185, 129, 0.1);
-    transform: translateY(-2px);
+    box-shadow: 0 2px 6px rgba(16, 56, 79, 0.08);
   }
 
-  /* Stat chip */
+  /* Badge / stat chip */
   .stat-chip {
-    background: rgba(16, 185, 129, 0.1);
-    border: 1px solid rgba(16, 185, 129, 0.2);
-    border-radius: 10px;
-    padding: 0.35rem 0.85rem;
+    background: rgba(0, 188, 255, 0.08);
+    border: 1px solid rgba(0, 188, 255, 0.2);
+    border-radius: 6px;
+    padding: 0.3rem 0.75rem;
     font-size: 0.8rem;
     font-weight: 700;
-    color: var(--color-primary-dark);
-    backdrop-filter: blur(4px);
+    color: var(--color-primary);
   }
 
   /* Section divider */
   .agro-divider {
     border: none;
     border-top: 1px solid var(--color-border);
-    margin: 2.5rem 0;
+    margin: 2rem 0;
   }
 
   /* Recharts tooltip override */
   .recharts-tooltip-wrapper .custom-tooltip {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(226, 232, 240, 0.8);
-    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.97);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
     padding: 12px 16px;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     font-size: 13px;
     font-weight: 500;
   }
 }
 
-/* ─── Sidebar ─────────────────────────────────────────────────────────────── */
+/* ─── Sidebar (Estilo Experto Bayer) ─────────────────────────────────────── */
 .sidebar {
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-right: 1px solid rgba(226, 232, 240, 0.8);
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
   color: var(--color-text);
-  box-shadow: 4px 0 24px -5px rgba(0, 0, 0, 0.02);
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);
 }
 
 .sidebar-nav-item {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.7rem 1rem;
-  border-radius: 12px;
+  gap: 0.3rem;
+  padding: 0.85rem 0.5rem;
+  border-radius: 6px;
   font-weight: 600;
-  font-size: 0.95rem;
-  transition: all 0.2s ease;
-  color: var(--color-text-secondary);
+  font-size: 0.68rem;
+  text-transform: none;
+  letter-spacing: 0;
+  transition: all 0.15s ease;
+  color: var(--color-muted);
+  text-align: center;
+  line-height: 1.2;
 }
 
 .sidebar-nav-item:hover {
-  background: rgba(241, 245, 249, 0.8);
-  color: var(--color-text);
-  transform: translateX(4px);
+  background: rgba(0, 188, 255, 0.06);
+  color: var(--color-primary);
 }
 
 .sidebar-nav-item.active {
-  background: rgba(16, 185, 129, 0.1);
-  color: var(--color-primary-dark);
+  background: rgba(0, 188, 255, 0.08);
+  color: var(--color-accent);
   font-weight: 700;
-  box-shadow: inset 3px 0 0 var(--color-primary);
+  box-shadow: none;
+  border-left: 3px solid var(--color-accent);
+  border-radius: 0 6px 6px 0;
 }
 
 /* ─── Scrollbar ───────────────────────────────────────────────────────────── */
@@ -213,7 +230,7 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border);
+  background: #c8d6e0;
   border-radius: 99px;
 }
 
@@ -230,4 +247,11 @@
 .recharts-legend-item-text {
   color: var(--color-text-secondary) !important;
   font-size: 13px;
+}
+
+/* ─── Print ───────────────────────────────────────────────────────────────── */
+@media print {
+  .sidebar, .print\\:hidden { display: none !important; }
+  body { background: white !important; }
+  .agro-card { box-shadow: none !important; border: 1px solid #ddd !important; }
 }

@@ -207,10 +207,10 @@ export default function Ranking({ appState, setAppState }: { appState: AppState,
         }
     };
 
-    // ── Agro IP color scale: deep emerald → bright mint ──────────
+    // ── Agro IP color scale: deep cyan → bright mint ──────────
     const getBarColor = (entry: any) => {
-        if (entry.ip_ponderado > 80) return '#059669';  // deep emerald
-        if (entry.ip_ponderado > 60) return '#10B981';  // vibrant emerald
+        if (entry.ip_ponderado > 80) return '#059669';  // deep cyan
+        if (entry.ip_ponderado > 60) return '#10B981';  // vibrant cyan
         if (entry.ip_ponderado > 40) return '#34D399';  // gentle mint
         return '#A7F3D0';                               // pale mint
     };
@@ -265,7 +265,7 @@ export default function Ranking({ appState, setAppState }: { appState: AppState,
                         <button
                             onClick={handleAnalizarRanking}
                             disabled={loadingRanking}
-                            className="btn-primary shadow-emerald-500/30 shadow-lg text-sm px-5 py-2 rounded-xl border-none font-bold"
+                            className="btn-primary shadow-cyan-500/30 shadow-lg text-sm px-5 py-2 rounded-xl border-none font-bold"
                         >
                             {loadingRanking ? <Loader2 className="animate-spin" size={16} /> : <Zap size={16} />}
                             {loadingRanking ? " Calculando…" : " Calcular Ranking IP"}
@@ -286,7 +286,7 @@ export default function Ranking({ appState, setAppState }: { appState: AppState,
                     {/* Map card */}
                     <div className="agro-card p-4 flex flex-col">
                         <h3 className="text-sm font-bold uppercase tracking-wider mb-4 flex items-center gap-2 text-slate-500">
-                            <span className="w-2.5 h-2.5 rounded-full inline-block bg-emerald-500 shadow-sm" />
+                            <span className="w-2.5 h-2.5 rounded-full inline-block bg-cyan-500 shadow-sm" />
                             Distribución Espacial
                         </h3>
                         <div className="flex-1 rounded-2xl overflow-hidden shadow-inner border border-slate-100 bg-slate-50">
@@ -297,10 +297,10 @@ export default function Ranking({ appState, setAppState }: { appState: AppState,
                     {/* IP Bar Chart card */}
                     <div className="agro-card p-8 flex flex-col">
                         <h3 className="text-sm font-bold uppercase tracking-wider mb-2 flex items-center gap-2 text-slate-500">
-                            <TrendingUp size={16} className="text-emerald-500" />
+                            <TrendingUp size={16} className="text-cyan-500" />
                             Índice de Productividad por Lote
                             {fromCache === true && !loadingRanking && (
-                                <span className="ml-auto flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 shadow-sm">
+                                <span className="ml-auto flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-full bg-cyan-50 text-cyan-600 border border-cyan-200 shadow-sm">
                                     <Zap size={10} /> instantáneo
                                 </span>
                             )}
@@ -345,22 +345,22 @@ export default function Ranking({ appState, setAppState }: { appState: AppState,
 
             {/* ══════════ ADVANCED RANKING (SOC & pH) — OpenLandMap-soildb ══════════ */}
             <div className="flex flex-col gap-6 mt-4">
-                <div className="agro-card p-6 flex flex-col border border-emerald-100 bg-gradient-to-br from-white to-emerald-50/20">
+                <div className="agro-card p-6 flex flex-col border border-cyan-100 bg-gradient-to-br from-white to-cyan-50/20">
                     <div className="flex items-center justify-between mb-4">
                         <div>
                             <h3 className="text-xl font-bold tracking-tight text-slate-800 flex items-center gap-2">
-                                <Activity size={20} className="text-emerald-500" />
+                                <Activity size={20} className="text-cyan-500" />
                                 Análisis de Suelo
                             </h3>
                             <div className="text-sm text-slate-500 font-medium mt-1 space-y-0.5">
-                                <p><strong>COS / pH (0–30 cm):</strong> Evolución 2000–2022 · <a href="https://github.com/openlandmap/soildb" target="_blank" rel="noreferrer" className="text-emerald-600 hover:text-emerald-700 underline underline-offset-2">OpenLandMap-soildb</a> (30m)</p>
+                                <p><strong>COS / pH (0–30 cm):</strong> Evolución 2000–2022 · <a href="https://github.com/openlandmap/soildb" target="_blank" rel="noreferrer" className="text-cyan-600 hover:text-cyan-700 underline underline-offset-2">OpenLandMap-soildb</a> (30m)</p>
                                 <p><strong>MO:</strong> IDECOR Córdoba · <strong>Agua Útil (2m):</strong> SEPA INTA / Satélite</p>
                             </div>
                         </div>
                         <button
                             onClick={handleAnalizarAvanzado}
                             disabled={loadingAdvanced}
-                            className="btn-primary shadow-emerald-500/30 shadow-lg text-sm px-5 py-2 rounded-xl border-none font-bold"
+                            className="btn-primary shadow-cyan-500/30 shadow-lg text-sm px-5 py-2 rounded-xl border-none font-bold"
                         >
                             {loadingAdvanced ? <Loader2 className="animate-spin" size={16} /> : <Zap size={16} />}
                             {loadingAdvanced ? " Calculando…" : " Calcular Análisis Satelital"}
@@ -382,7 +382,7 @@ export default function Ranking({ appState, setAppState }: { appState: AppState,
                                         <div className="flex items-center gap-2">
                                             <span>Evolución (soildb)</span>
                                             <div className="flex bg-slate-200/50 rounded-lg p-0.5 ml-2 border border-slate-200">
-                                                <button onClick={() => setSelectedSoilVar('soc')} className={`px-2 py-0.5 text-[10px] rounded-md transition-all ${selectedSoilVar === 'soc' ? 'bg-white shadow-sm text-emerald-700 font-bold' : 'text-slate-500 hover:text-slate-700'}`}>COS</button>
+                                                <button onClick={() => setSelectedSoilVar('soc')} className={`px-2 py-0.5 text-[10px] rounded-md transition-all ${selectedSoilVar === 'soc' ? 'bg-white shadow-sm text-cyan-700 font-bold' : 'text-slate-500 hover:text-slate-700'}`}>COS</button>
                                                 <button onClick={() => setSelectedSoilVar('ph')} className={`px-2 py-0.5 text-[10px] rounded-md transition-all ${selectedSoilVar === 'ph' ? 'bg-white shadow-sm text-purple-700 font-bold' : 'text-slate-500 hover:text-slate-700'}`}>pH</button>
                                             </div>
                                         </div>
@@ -501,7 +501,7 @@ export default function Ranking({ appState, setAppState }: { appState: AppState,
                         <input
                             type="date" value={startDate}
                             onChange={(e) => setStartDate(e.target.value)}
-                            className="text-sm rounded-xl px-4 py-2.5 outline-none transition bg-white border border-slate-200 text-slate-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 shadow-sm"
+                            className="text-sm rounded-xl px-4 py-2.5 outline-none transition bg-white border border-slate-200 text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-sm"
                         />
                     </div>
                     <div>
@@ -512,7 +512,7 @@ export default function Ranking({ appState, setAppState }: { appState: AppState,
                             type="date" value={endDate}
                             onChange={(e) => setEndDate(e.target.value)}
                             max={today.toISOString().split('T')[0]}
-                            className="text-sm rounded-xl px-4 py-2.5 outline-none transition bg-white border border-slate-200 text-slate-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 shadow-sm"
+                            className="text-sm rounded-xl px-4 py-2.5 outline-none transition bg-white border border-slate-200 text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-sm"
                         />
                     </div>
                     <div>
@@ -520,7 +520,7 @@ export default function Ranking({ appState, setAppState }: { appState: AppState,
                         <select
                             value={indexSelected}
                             onChange={(e) => setIndexSelected(e.target.value)}
-                            className="text-sm rounded-xl px-4 py-2.5 outline-none transition pr-10 bg-white border border-slate-200 text-slate-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 shadow-sm appearance-none"
+                            className="text-sm rounded-xl px-4 py-2.5 outline-none transition pr-10 bg-white border border-slate-200 text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-sm appearance-none"
                             style={{ backgroundImage: "url(\"data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 1rem center", backgroundSize: "1em" }}
                         >
                             <option value="NDVI">NDVI</option>
@@ -533,7 +533,7 @@ export default function Ranking({ appState, setAppState }: { appState: AppState,
                         <select
                             value={satelliteSource}
                             onChange={(e) => setSatelliteSource(e.target.value)}
-                            className="text-sm rounded-xl px-4 py-2.5 outline-none transition pr-10 bg-white border border-slate-200 text-slate-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 shadow-sm appearance-none"
+                            className="text-sm rounded-xl px-4 py-2.5 outline-none transition pr-10 bg-white border border-slate-200 text-slate-800 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-sm appearance-none"
                             style={{ backgroundImage: "url(\"data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 1rem center", backgroundSize: "1em" }}
                         >
                             <option value="Sentinel-2">Sentinel-2 (10m - c/5 días)</option>
@@ -544,7 +544,7 @@ export default function Ranking({ appState, setAppState }: { appState: AppState,
                     <button
                         onClick={handleAnalizarSeries}
                         disabled={loadingBenchmark}
-                        className="btn-primary ml-auto shadow-emerald-500/30 shadow-lg text-base px-6 py-2.5 rounded-xl border-none font-bold"
+                        className="btn-primary ml-auto shadow-cyan-500/30 shadow-lg text-base px-6 py-2.5 rounded-xl border-none font-bold"
                     >
                         {loadingBenchmark ? <Loader2 className="animate-spin" size={18} /> : <Play size={18} />}
                         {loadingBenchmark ? "Procesando satélite…" : "Ejecutar Análisis"}

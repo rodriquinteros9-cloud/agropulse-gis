@@ -1,7 +1,23 @@
 from fastapi import FastAPI
+from contextlib import asynccontextmanager
 import os
 from fastapi.middleware.cors import CORSMiddleware
 from routers import analysis_router, upload_router, prices_router, enso_router, commodity_router, satellite, sensitivity_router
+from routers.market_router import router as market_router
+from tasks.scheduler_tasks import start_scheduler, stop_scheduler
+from services.sio_granos_service import get_sio_service
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    start_scheduler(app)
+    yield
+    # Shutdown
+    stop_scheduler()
+    sio = get_sio_service()
+    await sio.close()
+
 
 app = FastAPI(
     title="AgroPulse Backend API",
@@ -30,6 +46,7 @@ app.include_router(enso_router.router, prefix="/api")
 app.include_router(commodity_router.router, prefix="/api")
 app.include_router(satellite.router, prefix="/api")
 app.include_router(sensitivity_router.router, prefix="/api")
+app.include_router(market_router, prefix="/api")
 
 
 @app.get("/api/health")

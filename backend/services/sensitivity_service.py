@@ -1,13 +1,13 @@
 """
 Servicio de Análisis de Sensibilidad Avanzado.
 
-Calcula la matriz de sensibilidad Precio × Rendimiento con percentiles
-históricos de precios derivados del World Bank Pink Sheet (misma fuente
-ya integrada en commodity_history_service.py).
+Calcula la matriz de sensibilidad Precio × Rendimiento con variaciones
+de +/- 32% sobre el precio pizarra actual (BCR), generando ejes de
+precios y rendimientos en 7 escalones simétricos.
 
 La lógica replica y extiende la planilla Excel del profesor:
-- Ejes de precio: P5 a P95 de los últimos N años (configurable).
-- Ejes de rendimiento: rango configurable por cultivo.
+- Ejes de precio: variación porcentual -32% a +32% del precio pizarra actual.
+- Ejes de rendimiento: mismo rango porcentual alrededor del rinde esperado.
 - Valores de celda: Margen Bruto en USD/ha o porcentaje sobre costos.
 """
 
@@ -34,13 +34,13 @@ CROP_TO_COMMODITY = {
 
 # ── Retenciones vigentes (DEX) ──
 RETENCIONES = {
-    "Soja": 0.33,
-    "Soja Segunda": 0.33,
-    "Maíz": 0.12,
-    "Trigo": 0.12,
-    "Girasol": 0.07,
-    "Sorgo": 0.12,
-    "Cebada": 0.12,
+    "Soja": 0.24,
+    "Soja Segunda": 0.24,
+    "Maíz": 0.085,
+    "Trigo": 0.075,
+    "Girasol": 0.045,
+    "Sorgo": 0.085,
+    "Cebada": 0.075,
     "Maní": 0.0,
 }
 
@@ -168,12 +168,12 @@ async def compute_price_distribution(
     )
 
 
-def generate_price_axis(dist: PriceDistribution, num_cols: int = 9) -> List[Dict[str, Any]]:
+def generate_price_axis(dist: PriceDistribution, num_cols: int = 7) -> List[Dict[str, Any]]:
     """
     Genera el eje de precios usando variaciones porcentuales sintéticas
-    alrededor del precio actual de pizarra (+/- 20%).
+    alrededor del precio actual de pizarra (+/- 32%).
     """
-    increments = [-20, -15, -10, -5, 0, 5, 10, 15, 20]
+    increments = [-32, -21, -11, 0, 11, 21, 32]
     points = []
     
     for pct in increments:
@@ -190,23 +190,20 @@ def generate_price_axis(dist: PriceDistribution, num_cols: int = 9) -> List[Dict
 
 def generate_yield_axis(crop_id: str, rinde_esperado: Optional[float] = None) -> List[Dict[str, Any]]:
     """
-    Genera el eje de rendimientos para un cultivo.
-    Incluye siempre el rinde esperado del productor si se proporciona.
+    Genera el eje de rendimientos para un cultivo (+/- 32% alrededor del rinde base en 7 pasos).
     """
     yr = YIELD_RANGES.get(crop_id, {"min": 10, "max": 80, "step": 5, "medio": 35})
     rinde_base = rinde_esperado if rinde_esperado is not None else yr["medio"]
 
-    # Generar puntos: desde min hasta max con step definido
+    increments = [-32, -21, -11, 0, 11, 21, 32]
     points = []
-    rto = yr["min"]
-    while rto <= yr["max"]:
+    
+    for pct in increments:
+        rto = round(rinde_base * (1 + pct / 100.0), 1)
         points.append(rto)
-        rto += yr["step"]
 
-    # Asegurarnos de incluir el rinde esperado
-    if rinde_base not in points:
-        points.append(rinde_base)
-        points.sort()
+    # Remueve duplicados y ordena
+    points = sorted(list(set(points)))
 
     return [
         {
