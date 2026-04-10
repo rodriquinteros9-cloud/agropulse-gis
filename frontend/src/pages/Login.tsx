@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
+import BrandLogo from '../components/BrandLogo';
 
 export default function Login() {
     const [email, setEmail] = useState('');
@@ -23,10 +24,8 @@ export default function Login() {
             <div className="w-full max-w-[360px] flex flex-col items-center">
                 
                 {/* Logo */}
-                <div className="mb-12 flex items-center justify-center">
-                    <span className="text-3xl font-light text-slate-600 tracking-tight">
-                        Agro<span className="font-extrabold text-[#001c3d]">Pulse</span> <span className="text-emerald-500 font-black text-4xl">X</span>
-                    </span>
+                <div className="mb-12 flex items-center justify-center scale-150 transform">
+                    <BrandLogo />
                 </div>
 
                 {/* Login Form */}
@@ -61,7 +60,7 @@ export default function Login() {
                     </div>
 
                     <div className="flex justify-start w-full pt-1">
-                        <a href="#" className="font-bold text-[#004e7c] text-sm hover:underline">
+                        <a href="#" className="font-bold text-sm hover:underline" style={{ color: 'var(--color-action)' }}>
                             Olvidé mi contraseña
                         </a>
                     </div>
@@ -72,9 +71,12 @@ export default function Login() {
                             disabled={!isFormFilled}
                             className={`w-full py-3.5 rounded font-bold text-base transition-colors ${
                                 isFormFilled 
-                                ? "bg-emerald-600 text-white hover:bg-emerald-700" 
+                                ? "text-white" 
                                 : "bg-[#e0e0e0] text-[#a0a0a0] cursor-not-allowed"
                             }`}
+                            style={isFormFilled ? { background: 'var(--color-accent)' } : {}}
+                            onMouseEnter={(e) => { if(isFormFilled) e.currentTarget.style.background = 'var(--color-action)' }}
+                            onMouseLeave={(e) => { if(isFormFilled) e.currentTarget.style.background = 'var(--color-accent)' }}
                         >
                             Ingresar
                         </button>
@@ -84,14 +86,14 @@ export default function Login() {
                 {/* Footer Links */}
                 <div className="mt-6 text-center space-y-3">
                     <p className="text-[#666666] text-sm">
-                        ¿Aún no tienes cuenta? <a href="#" className="font-bold text-[#004e7c] hover:underline">Regístrate aquí</a>
+                        ¿Aún no tienes cuenta? <a href="#" className="font-bold hover:underline" style={{ color: 'var(--color-action)' }}>Regístrate aquí</a>
                     </p>
                     
                     <div className="flex flex-col gap-2 pt-2">
-                        <a href="#" className="font-bold text-[#004e7c] text-sm hover:underline">
+                        <a href="#" className="font-bold text-sm hover:underline" style={{ color: 'var(--color-action)' }}>
                             Política de privacidad
                         </a>
-                        <a href="#" className="font-bold text-[#004e7c] text-sm hover:underline">
+                        <a href="#" className="font-bold text-sm hover:underline" style={{ color: 'var(--color-action)' }}>
                             Términos y condiciones
                         </a>
                     </div>

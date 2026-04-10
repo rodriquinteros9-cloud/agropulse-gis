@@ -1,6 +1,6 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import type { AppState } from '../App';
-import { FileUp, BarChart3, LineChart, Loader2, ArrowLeft, Layers, ClipboardList } from 'lucide-react';
+import { FileUp, BarChart3, LineChart, Loader2, ArrowLeft, Layers, ClipboardList, Activity, Leaf } from 'lucide-react';
 import { useState } from 'react';
 
 export default function DashboardLayout({ appState, setAppState }: { appState: AppState, setAppState: any }) {
@@ -43,17 +43,26 @@ export default function DashboardLayout({ appState, setAppState }: { appState: A
     return (
         <div className="flex h-screen overflow-hidden" style={{ background: 'var(--color-background)' }}>
 
-            {/* ── Sidebar estilo Experto Bayer ── */}
+            {/* ── Sidebar ── */}
             <aside className="sidebar w-[72px] flex flex-col shrink-0 items-center">
 
-                {/* Logo mark */}
+                {/* App Icon */}
                 <div className="w-full flex justify-center py-5 border-b border-[var(--color-border)]">
-                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #00bcff 0%, #89d329 100%)' }}>
-                        <span className="text-white font-black text-lg tracking-tighter">G</span>
+                    <div className="w-10 h-10 rounded-xl relative overflow-hidden flex items-center justify-center shadow-sm border border-[#24C09E]/20" style={{ background: 'var(--color-primary)' }}>
+                        {/* Concentric ripples (approximating icon) */}
+                        <div className="absolute w-[180%] h-[180%] rounded-full border-[1.5px] border-[#A7E0EF]/20" />
+                        <div className="absolute w-[120%] h-[120%] rounded-full border-[1.5px] border-[#24C09E]/30" />
+                        <div className="absolute w-[70%] h-[70%] rounded-full border-[1.5px] border-[#3A8B9E]/50" />
+                        
+                        {/* Pulse and Leaf */}
+                        <div className="relative z-10 flex flex-col items-center justify-center translate-y-0.5">
+                            <Activity size={22} className="text-[#A7E0EF] absolute -translate-y-1" strokeWidth={2.5} />
+                            <Leaf size={14} className="text-[#24C09E] fill-[#24C09E] mt-3" />
+                        </div>
                     </div>
                 </div>
 
-                {/* Nav items — Iconos centrados con texto abajo (estilo Bayer) */}
+                {/* Nav items */}
                 <nav className="flex-1 w-full flex flex-col items-center pt-4 gap-1 px-1">
                     <NavLink
                         to="/dashboard/ranking"

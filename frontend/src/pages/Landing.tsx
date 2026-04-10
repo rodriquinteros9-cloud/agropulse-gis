@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Activity, Map, PieChart, Droplets, Target, ShieldCheck } from 'lucide-react';
+import BrandLogo from '../components/BrandLogo';
 
 export default function Landing() {
     const navigate = useNavigate();
@@ -9,12 +10,7 @@ export default function Landing() {
             {/* --- Navbar --- */}
             <nav className="fixed w-full z-50 bg-white/90 backdrop-blur-lg border-b" style={{ borderColor: 'var(--color-border)' }}>
                 <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                        <img src="/logo.png" alt="AgroPulse Logo" className="h-9 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />
-                        <span className="text-xl font-black tracking-tight" style={{ color: 'var(--color-text)' }}>
-                            Agro<span style={{ color: '#00bcff' }}>Pulse</span>
-                        </span>
-                    </div>
+                    <BrandLogo className="h-9" />
                     <div className="hidden md:flex items-center gap-8 text-sm font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
                         <a href="#features" className="hover:opacity-80 transition-opacity">Soluciones</a>
                         <a href="#demo" className="hover:opacity-80 transition-opacity">Tecnología</a>
@@ -35,70 +31,122 @@ export default function Landing() {
             </nav>
 
             {/* --- Hero Section --- */}
-            <section className="relative pt-28 pb-16 lg:pt-40 lg:pb-24 overflow-hidden px-6">
-                {/* Background subtle gradient */}
-                <div className="absolute inset-0 pointer-events-none -z-10" style={{ background: 'linear-gradient(180deg, #eaf6fb 0%, var(--color-background) 60%)' }} />
+            <section className="relative min-h-[85vh] flex flex-col justify-center overflow-hidden">
+                {/* === BACKGROUND IMAGE FULL-BLEED === */}
+                <img
+                    src="/hero-fondo.jpg"
+                    alt="Agronomos trabajando en el campo con tecnología"
+                    className="absolute inset-0 w-full h-full object-cover object-center"
+                    style={{ zIndex: 0 }}
+                />
 
-                <div className="max-w-4xl mx-auto text-center relative z-10">
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border text-sm font-bold mb-8 uppercase tracking-wide" style={{ background: 'rgba(0, 188, 255, 0.06)', borderColor: 'rgba(0, 188, 255, 0.2)', color: 'var(--color-primary)' }}>
-                        <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: '#00bcff' }}></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: '#00bcff' }}></span>
-                        </span>
-                        Agricultura de Precisión Inteligente
-                    </div>
-                    <h1 className="text-4xl lg:text-6xl font-extrabold tracking-tight mb-6 leading-[1.1]" style={{ color: 'var(--color-text)' }}>
-                        Transforma los datos de tus lotes en{' '}
-                        <span style={{ color: '#00bcff' }}>Rentabilidad</span>{' '}
-                        <span style={{ color: '#00bcff' }}>Absoluta</span>
-                    </h1>
-                    <p className="text-base lg:text-lg max-w-3xl mx-auto mb-10 font-medium leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
-                        AgroPulse centraliza índices productivos, clima, agua útil (SEPA) y rentabilidad (Rinde de Indiferencia) en una única plataforma visual. Deja de adivinar, empieza a optimizar.
-                    </p>
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                        <button 
-                            onClick={() => navigate('/login')}
-                            className="w-full sm:w-auto px-8 py-3.5 text-white rounded-lg font-bold text-base transition-all duration-200 shadow-lg hover:-translate-y-0.5"
-                            style={{ background: 'var(--color-action)', boxShadow: '0 4px 12px rgba(137, 211, 41, 0.3)' }}
-                            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--color-action-dark)'}
-                            onMouseLeave={(e) => e.currentTarget.style.background = 'var(--color-action)'}
-                        >
-                            Comenzar Prueba Gratis
-                        </button>
+                {/* Overlay: gradiente izquierda oscuro para texto */}
+                <div className="absolute inset-0" style={{
+                    zIndex: 1,
+                    background: 'linear-gradient(100deg, rgba(10, 34, 57, 0.88) 0%, rgba(10, 34, 57, 0.72) 45%, rgba(10, 34, 57, 0.25) 75%, transparent 100%)'
+                }} />
+
+                {/* Overlay: gradiente inferior para transición suave a la siguiente sección */}
+                <div className="absolute bottom-0 left-0 right-0 h-40" style={{
+                    zIndex: 2,
+                    background: 'linear-gradient(to bottom, transparent, var(--color-background))'
+                }} />
+
+                {/* Content */}
+                <div className="relative px-6 pt-32 pb-24 max-w-7xl mx-auto w-full" style={{ zIndex: 3 }}>
+                    <div className="max-w-2xl">
+                        {/* Badge */}
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border text-sm font-bold mb-8 uppercase tracking-wide" style={{ background: 'rgba(36, 192, 158, 0.15)', borderColor: 'rgba(36, 192, 158, 0.45)', color: '#24C09E' }}>
+                            <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: '#24C09E' }}></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: '#24C09E' }}></span>
+                            </span>
+                            Agricultura de Precisión Inteligente
+                        </div>
+
+                        {/* Heading */}
+                        <h1 className="text-4xl lg:text-6xl font-extrabold tracking-tight mb-6 leading-[1.1] text-white drop-shadow-lg">
+                            Transforma los datos<br/> de tus lotes en{' '}
+                            <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-300">
+                                Rentabilidad Real
+                            </span>
+                        </h1>
+
+                        {/* Subheading */}
+                        <p className="text-base lg:text-lg mb-10 font-medium leading-relaxed" style={{ color: 'rgba(255,255,255,0.80)' }}>
+                            AgroPulse centraliza índices productivos, clima, agua útil (SEPA) y rentabilidad 
+                            en una única plataforma visual. Deja de adivinar, empieza a optimizar.
+                        </p>
+
+                        {/* CTA Buttons */}
+                        <div className="flex flex-col sm:flex-row items-start gap-4">
+                            <button 
+                                onClick={() => navigate('/login')}
+                                className="px-8 py-3.5 text-white rounded-lg font-bold text-base transition-all duration-200 shadow-lg hover:-translate-y-0.5 hover:shadow-xl"
+                                style={{ background: 'var(--color-accent)', boxShadow: '0 4px 18px rgba(36, 192, 158, 0.4)' }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = 'var(--color-action)'}
+                                onMouseLeave={(e) => e.currentTarget.style.background = 'var(--color-accent)'}
+                            >
+                                Comenzar Prueba Gratis
+                            </button>
+                            <a
+                                href="#features"
+                                className="px-8 py-3.5 rounded-lg font-bold text-base transition-all duration-200 border hover:-translate-y-0.5"
+                                style={{ color: 'white', borderColor: 'rgba(255,255,255,0.35)', background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)' }}
+                            >
+                                Ver Soluciones →
+                            </a>
+                        </div>
+
+                        {/* Social proof chips */}
+                        <div className="flex flex-wrap gap-3 mt-10">
+                            {['📡 Imágenes Sentinel-2', '💧 Datos SEPA locales', '📈 Precios BCR en vivo'].map(item => (
+                                <span key={item} className="px-3 py-1 rounded-full text-xs font-semibold" style={{ background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.2)' }}>
+                                    {item}
+                                </span>
+                            ))}
+                        </div>
                     </div>
                 </div>
 
-                {/* Dashboard mockup preview */}
-                <div className="max-w-5xl mx-auto mt-16 relative z-10">
-                    <div className="relative rounded-xl bg-white p-3 border shadow-xl" style={{ borderColor: 'var(--color-border)' }}>
-                        <div className="rounded-lg overflow-hidden aspect-[16/9] relative flex items-center justify-center" style={{ background: 'var(--color-primary-dark)' }}>
-                            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1592982537447-6f2b6a0b2fd6?q=80&w=2600&auto=format&fit=crop')] bg-cover bg-center opacity-30 mix-blend-overlay"></div>
+                {/* Dashboard mockup preview — now BELOW the hero, as a floating card */}
+                <div className="relative max-w-5xl mx-auto w-full px-6 pb-10" style={{ zIndex: 3, marginTop: '-2rem' }}>
+                    <div className="relative rounded-2xl overflow-hidden border shadow-2xl" style={{ borderColor: 'var(--color-border)' }}>
+                        {/* top bar */}
+                        <div className="flex items-center gap-2 px-4 py-3 bg-slate-800">
+                            <span className="w-3 h-3 rounded-full bg-red-400 opacity-80"></span>
+                            <span className="w-3 h-3 rounded-full bg-yellow-400 opacity-80"></span>
+                            <span className="w-3 h-3 rounded-full bg-green-400 opacity-80"></span>
+                            <span className="ml-4 text-xs font-mono text-slate-400">agropulse.app — Panel de Control</span>
+                        </div>
+                        <div className="aspect-[16/8] relative flex items-center justify-center" style={{ background: 'var(--color-primary-dark)' }}>
+                            <div className="absolute inset-0 bg-cover bg-center opacity-25" style={{ backgroundImage: 'url("/hero-fondo.jpg")' }}></div>
                             
-                            {/* Abstract Floating UI Elements */}
-                            <div className="absolute left-8 bottom-8 p-5 rounded-lg border w-64 text-left" style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)', borderColor: 'rgba(255,255,255,0.15)' }}>
+                            {/* Floating UI Elements */}
+                            <div className="absolute left-8 bottom-8 p-5 rounded-xl border w-64 text-left" style={{ background: 'rgba(255,255,255,0.07)', backdropFilter: 'blur(16px)', borderColor: 'rgba(255,255,255,0.12)' }}>
                                 <div className="flex items-center gap-3 text-white mb-2">
-                                    <Droplets size={18} style={{ color: '#00bcff' }} />
+                                    <Droplets size={18} style={{ color: '#A7E0EF' }} />
                                     <span className="font-bold text-sm">Agua Útil (SEPA)</span>
                                 </div>
                                 <div className="text-2xl font-black text-white">78% <span className="text-xs font-normal text-slate-300">Capacidad</span></div>
                                 <div className="mt-3 h-1.5 bg-white/20 rounded-full overflow-hidden">
-                                    <div className="w-[78%] h-full rounded-full" style={{ background: '#00bcff' }}></div>
+                                    <div className="w-[78%] h-full rounded-full transition-all duration-1000" style={{ background: 'linear-gradient(90deg, #A7E0EF, #24C09E)' }}></div>
                                 </div>
                             </div>
 
-                            <div className="absolute right-8 top-8 p-5 rounded-lg border w-72 text-left" style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)', borderColor: 'rgba(255,255,255,0.15)' }}>
+                            <div className="absolute right-8 top-8 p-5 rounded-xl border w-72 text-left" style={{ background: 'rgba(255,255,255,0.07)', backdropFilter: 'blur(16px)', borderColor: 'rgba(255,255,255,0.12)' }}>
                                 <div className="flex items-center gap-3 text-white mb-2">
-                                    <PieChart size={18} style={{ color: '#89d329' }} />
+                                    <PieChart size={18} style={{ color: '#24C09E' }} />
                                     <span className="font-bold text-sm">Rinde de Indiferencia</span>
                                 </div>
                                 <div className="text-2xl font-black text-white">2.4 <span className="text-xs font-normal text-slate-300">tn/ha</span></div>
                                 <div className="mt-3 flex gap-2">
-                                    <span className="px-2 py-0.5 text-xs rounded border font-semibold" style={{ background: 'rgba(137,211,41,0.15)', color: '#89d329', borderColor: 'rgba(137,211,41,0.3)' }}>Compra Insumos</span>
+                                    <span className="px-2 py-0.5 text-xs rounded border font-semibold" style={{ background: 'rgba(36,192,158,0.15)', color: '#24C09E', borderColor: 'rgba(36,192,158,0.3)' }}>Compra Insumos</span>
                                     <span className="px-2 py-0.5 text-xs rounded border font-semibold" style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)', borderColor: 'rgba(255,255,255,0.2)' }}>Venta Granos</span>
                                 </div>
                             </div>
                             
-                            <div className="z-10 bg-white px-6 py-3 rounded-lg font-bold shadow-lg flex items-center gap-2.5 text-sm" style={{ color: 'var(--color-text)' }}>
+                            <div className="z-10 bg-white/95 backdrop-blur px-6 py-3 rounded-xl font-bold shadow-xl flex items-center gap-2.5 text-sm" style={{ color: 'var(--color-text)' }}>
                                 <Activity style={{ color: '#00bcff' }} size={18} />
                                 Monitoreo Satelital en Tiempo Real
                             </div>
@@ -118,8 +166,8 @@ export default function Landing() {
                     <div className="grid md:grid-cols-3 gap-6">
                         {/* Feature 1 */}
                         <div className="p-7 rounded-xl border transition-all hover:shadow-md" style={{ background: 'var(--color-background)', borderColor: 'var(--color-border)' }}>
-                            <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-5" style={{ background: 'rgba(0, 188, 255, 0.08)' }}>
-                                <Map size={24} style={{ color: '#00bcff' }} />
+                            <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-5" style={{ background: 'rgba(167, 224, 239, 0.2)' }}>
+                                <Map size={24} style={{ color: '#3A8B9E' }} />
                             </div>
                             <h3 className="text-lg font-bold mb-3" style={{ color: 'var(--color-text)' }}>Zonificación Intralote</h3>
                             <p className="text-sm font-medium leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
@@ -128,8 +176,8 @@ export default function Landing() {
                         </div>
                         {/* Feature 2 */}
                         <div className="p-7 rounded-xl border transition-all hover:shadow-md" style={{ background: 'var(--color-background)', borderColor: 'var(--color-border)' }}>
-                            <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-5" style={{ background: 'rgba(0, 188, 255, 0.08)' }}>
-                                <Activity size={24} style={{ color: '#00bcff' }} />
+                            <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-5" style={{ background: 'rgba(58, 139, 158, 0.1)' }}>
+                                <Activity size={24} style={{ color: '#3A8B9E' }} />
                             </div>
                             <h3 className="text-lg font-bold mb-3" style={{ color: 'var(--color-text)' }}>Monitoreo de Agua SEPA</h3>
                             <p className="text-sm font-medium leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
@@ -138,8 +186,8 @@ export default function Landing() {
                         </div>
                         {/* Feature 3 */}
                         <div className="p-7 rounded-xl border transition-all hover:shadow-md" style={{ background: 'var(--color-background)', borderColor: 'var(--color-border)' }}>
-                            <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-5" style={{ background: 'rgba(137, 211, 41, 0.08)' }}>
-                                <Target size={24} style={{ color: '#89d329' }} />
+                            <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-5" style={{ background: 'rgba(36, 192, 158, 0.1)' }}>
+                                <Target size={24} style={{ color: '#24C09E' }} />
                             </div>
                             <h3 className="text-lg font-bold mb-3" style={{ color: 'var(--color-text)' }}>Márgenes y Mercado</h3>
                             <p className="text-sm font-medium leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>

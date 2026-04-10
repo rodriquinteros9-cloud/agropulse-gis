@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UploadCloud, Activity, BarChart3, Loader2, CheckCircle2, FileBox, X, ClipboardList } from 'lucide-react';
+import BrandLogo from '../components/BrandLogo';
 
 export default function Portal({ setAppState }: { setAppState: any }) {
     const [loading, setLoading] = useState(false);
@@ -67,15 +68,8 @@ export default function Portal({ setAppState }: { setAppState: any }) {
         <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden" style={{ background: 'var(--color-background)' }}>
 
             {/* Logo / Brand */}
-            <div className="text-center mb-8 relative z-10">
-                <img
-                    src="/logo.png"
-                    alt="AgroPulse — Plataforma Satelital de Monitoreo de Cultivos"
-                    className="h-28 mx-auto object-contain mb-4"
-                />
-                <h1 className="text-2xl font-extrabold tracking-tight" style={{ color: 'var(--color-text)' }}>
-                    Agro<span style={{ color: '#00bcff' }}>Pulse</span>
-                </h1>
+            <div className="mb-12 flex justify-center scale-150 transform">
+                <BrandLogo />
             </div>
 
             {/* ── FASE 1: Uploader ─────────────────────────────────────────── */}

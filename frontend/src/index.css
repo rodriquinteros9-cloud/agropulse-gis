@@ -3,42 +3,43 @@
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   GRAVITY — Design System (Estilo Experto Bayer)
-   Decreto 877/2025 · Paleta Corporativa Agro
+   GRAVITY — Design System (AgroPulse X)
+   Paleta Corporativa AgroPulse X
    ═══════════════════════════════════════════════════════════════════════════ */
 @theme {
-  /* ── Brand Navy (Texto principal y UI) ── */
-  --color-primary: #10384f;          /* Navy principal — headings, sidebar */
-  --color-primary-light: #1a5276;    /* Navy claro — hover states */
-  --color-primary-dark: #0b2637;     /* Navy oscuro — active states */
+  /* ── Pulse Dark Navy (Primario) ── */
+  --color-primary: #0B243D;          
+  --color-primary-light: #194065;    
+  --color-primary-dark: #061524;     
 
-  /* ── Accent Cyan (Marca, links, highlights) ── */
-  --color-accent: #00bcff;           /* Cyan Bayer — logo, links activos */
-  --color-accent-light: #5cd4ff;     /* Cyan suave */
+  /* ── X-Factor Green (Marca, links, highlights) ── */
+  --color-accent: #24C09E;           
+  --color-accent-light: #A7E0EF;     /* Agro Light Cyan */
 
-  /* ── Action Green (CTAs, éxito) ── */
-  --color-action: #89d329;           /* Verde Bayer — botones primarios */
-  --color-action-dark: #6db51e;      /* Verde oscuro — hover */
+  /* ── Secondary Green (CTAs) ── */
+  --color-action: #3A8B9E;           
+  --color-action-dark: #27616F;      
 
   /* ── Neutrals ── */
-  --color-background: #f5f5f5;       /* Gris cálido de fondo */
-  --color-surface: #ffffff;          /* Blanco puro — cards */
-  --color-border: #e0e0e0;          /* Gris borde sutil */
-  --color-muted: #8a9bae;           /* Gris azulado — texto secundario */
+  --color-background: #F8FBFB;       /* Custom clean background */
+  --color-surface: #ffffff;          
+  --color-border: #E0E7EC;          
+  --color-muted: #8AA4AD;           
 
   /* ── Text ── */
-  --color-text: #10384f;             /* Navy — texto principal */
-  --color-text-secondary: #5e7d8f;   /* Slate medio — texto secundario */
+  --color-text: #0B243D;             
+  --color-text-secondary: #5E7D8F;   
 
-  /* ── Semantic ── */
-  --color-success: #89d329;
-  --color-warning: #f4bc12;
-  --color-danger: #c20000;           /* Rojo Bayer */
+  /* ── Semantic / Other ── */
+  --color-earth: #E27008;            /* Earth Tone */
+  --color-success: #24C09E;
+  --color-warning: #E27008;
+  --color-danger: #c20000;           
 
   --font-inter: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 
   /* Spacing / radii */
-  --radius-card: 8px;                /* Bordes más contenidos estilo Bayer */
+  --radius-card: 12px;               /* Softer layout */
 }
 
 /* ─── Base ───────────────────────────────────────────────────────────────── */

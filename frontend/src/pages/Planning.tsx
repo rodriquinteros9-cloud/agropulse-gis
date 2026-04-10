@@ -394,16 +394,8 @@ export default function Planning({ appState }: { appState: AppState, setAppState
                         <tbody className="divide-y divide-slate-100/80 text-sm">
                             {lotes.map((lote: any) => (
                                 <tr key={lote.id} className="hover:bg-slate-50/60 hover:shadow-sm transition-all group">
-                                    <td className="px-6 py-4 font-semibold text-slate-700 flex flex-col gap-1.5">
+                                    <td className="px-6 py-4 font-semibold text-slate-700">
                                         <span className="text-[15px]">{lote.name}</span>
-                                        <div className="flex gap-2 text-[10px] text-slate-500 font-bold tracking-widest uppercase">
-                                            <span title="Índice Productivo" className="px-2 py-0.5 rounded-md bg-white border border-slate-200 shadow-sm">
-                                                IP {lote.ip}
-                                            </span>
-                                            <span title="Agua Útil Perfil" className="px-2 py-0.5 rounded-md bg-white border border-slate-200 flex items-center gap-1 shadow-sm">
-                                                <Droplets size={10} className="text-blue-500" /> {lote.au} mm
-                                            </span>
-                                        </div>
                                     </td>
                                     {crops.map(crop => {
                                         const isSelected = decisions[lote.id]?.[crop] || false;
